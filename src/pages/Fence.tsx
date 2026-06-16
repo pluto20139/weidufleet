@@ -322,7 +322,7 @@ const Fence: React.FC = () => {
                       <Input placeholder={t('fence.address_placeholder')} />
                     </Form.Item>
                     <Form.Item name="radius" label={t('fence.radius')} rules={[{ required: true }]}>
-                      <InputNumber min={0.1} step={0.1} style={{ width: '100%' }} onChange={v => setFenceRadius((v || 1) * 1000)} />
+                      <InputNumber min={0.1} max={100} step={0.1} style={{ width: '100%' }} onChange={v => setFenceRadius((v || 1) * 1000)} />
                     </Form.Item>
                   </>
                 )}

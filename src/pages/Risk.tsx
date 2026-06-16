@@ -139,7 +139,7 @@ const Risk: React.FC = () => {
       render: (status: string) => {
         const statusMap: Record<string, string> = {
           Pending: t('risk.pending', '未处理'),
-          WorkOrder: '已生成工单',
+          WorkOrder: t('risk.repairing', '维修中'),
           Fixed: t('risk.fixed', '维修完成'),
         };
         const colorMap: Record<string, string> = {
@@ -160,7 +160,7 @@ const Risk: React.FC = () => {
             size="small"
             onClick={() => handleRepairFault(record)}
           >
-            {t('fence.repair')}
+            {'一键报修'}
           </Button>
         ) : null,
     },
@@ -190,7 +190,7 @@ const Risk: React.FC = () => {
         };
         const statusMap: Record<string, string> = {
           Pending: t('risk.pending', '未处理'),
-          WorkOrder: '已生成工单',
+          WorkOrder: t('risk.repairing', '维修中'),
           Fixed: t('risk.fixed', '维修完成'),
         };
         return <Tag color={colorMap[status] || 'default'}>{statusMap[status] || status}</Tag>;

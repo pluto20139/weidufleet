@@ -216,14 +216,15 @@ const ListView: React.FC = () => {
               placeholder={t('veh.battery_version')}
               value={batteryVerVal}
               onChange={(e) => setBatteryVerVal(e.target.value)}
+              maxLength={20}
             />
           </Col>
           <Col xs={24} sm={16} md={12}>
             <Space align="center">
               <span>{t('veh.age')}:</span>
-              <InputNumber placeholder={t('veh.min_age')} min={0} max={50} value={minAgeVal} onChange={setMinAgeVal} />
+              <InputNumber placeholder={t('veh.min_age')} min={0} max={100} value={minAgeVal} onChange={setMinAgeVal} />
               <span>-</span>
-              <InputNumber placeholder="最大车龄" min={0} max={50} value={maxAgeVal} onChange={setMaxAgeVal} />
+              <InputNumber placeholder="最大车龄" min={0} max={100} value={maxAgeVal} onChange={setMaxAgeVal} />
             </Space>
           </Col>
           <Col xs={24} md={12} style={{ textAlign: 'right' }}>

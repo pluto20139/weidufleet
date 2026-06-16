@@ -81,24 +81,37 @@ const Monitor: React.FC = () => {
   const showLocation = _mt === 'location';
   const showPlayback = _mt === 'playback';
 
-  // Enterprise tree data
-  const enterpriseTreeData = [
-    {
-      title: '智利物流集团 (24)',
-      key: 'enterprise',
-      children: [
-        {
-          title: '圣地亚哥分部 (24)',
-          key: 'santiago',
-          children: vehicles.map((v) => ({
-            title: <span>{maskPlate(v.plate)} <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag></span>,
-            key: `vehicle-${v.vin}`,
-            isLeaf: true,
-          })),
-        },
-      ],
-    },
-  ];
+  // Enterprise tree data (filtered by search)
+  const enterpriseTreeData = useMemo(() => {
+    const filteredVehicles = vehicles.filter(v => {
+      if (!plateFilter) return true;
+      const lowerFilter = plateFilter.toLowerCase();
+      return (
+        v.plate.toLowerCase().includes(lowerFilter) ||
+        v.vin.toLowerCase().includes(lowerFilter) ||
+        matchPlateSearch(plateFilter, v.plate) ||
+        matchVinSearch(plateFilter, v.vin) ||
+        '智利物流集团'.includes(plateFilter)
+      );
+    });
+    return [
+      {
+        title: `智利物流集团 (${filteredVehicles.length})`,
+        key: 'enterprise',
+        children: [
+          {
+            title: `圣地亚哥分部 (${filteredVehicles.length})`,
+            key: 'santiago',
+            children: filteredVehicles.map((v) => ({
+              title: <span>{maskPlate(v.plate)} <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag></span>,
+              key: `vehicle-${v.vin}`,
+              isLeaf: true,
+            })),
+          },
+        ],
+      },
+    ];
+  }, [vehicles, plateFilter]);
 
   // Filter vehicles based on selection
   const displayedVehicles = selectedVehicles.length > 0

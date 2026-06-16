@@ -162,7 +162,7 @@ export function getBatteryAlerts(): BatteryAlert[] {
 }
 
 // --- Driving page mock data ---
-const alertTypes = ['FCW1', 'FCW2', 'AEB_V', 'PCW1', 'PCW2', 'AEB_P'] as const;
+const alertTypes = ['Rapid Accel', 'Hard Brake', 'Sharp Turn', 'Fatigue', 'AEB', 'Rapid Accel'] as const;
 
 export function getDrivingAlerts(): DrivingAlert[] {
   return vehicles.slice(0, 8).map((v, i) => ({
@@ -183,7 +183,7 @@ export function getDrivingReports(): DrivingReport[] {
     id: `dr-${i}`,
     plate: v.plate,
     vin: v.vin,
-    period: i < 4 ? '2025-W23' : '2025-06',
+    period: i < 4 ? '2025年第23周' : '2025年6月',
     km: Math.floor(500 + Math.random() * 3000),
     risks: Math.floor(1 + Math.random() * 15),
     level: reportLevels[i % 4]!,
@@ -267,7 +267,7 @@ const tripData: TripDetail[] = [
     id: 't1', vin: 'LJ8T7AD0000100000', plate: 'KLTX51',
     startTime: '2026-06-10 08:00', endTime: '2026-06-10 09:25',
     startLocation: '智利圣地亚哥首都大区圣地亚哥市阿乌马达步行街234号', endLocation: '智利瓦尔帕莱索大区瓦尔帕莱索港码头大道150号',
-    distance: 115, duration: '1小时25分钟', avgSpeed: 81, maxSpeed: 95, minSpeed: 55,
+    distance: 115, duration: '01:25', avgSpeed: 81, maxSpeed: 95, minSpeed: 55,
     alerts: [
       { id: 'a1', type: '急加速', time: '2026-06-04 08:15' },
       { id: 'a2', type: '急减速', time: '2026-06-04 08:45' },
@@ -279,7 +279,7 @@ const tripData: TripDetail[] = [
     id: 't2', vin: 'LJ8T7AD0000100001', plate: 'BDFG78',
     startTime: '2026-05-28 07:30', endTime: '2026-05-28 10:10',
     startLocation: '智利圣地亚哥马伊普区工业大道5500号', endLocation: '智利圣地亚哥拉斯孔德斯区商业大道3200号',
-    distance: 95, duration: '2小时40分钟', avgSpeed: 62, maxSpeed: 88, minSpeed: 40,
+    distance: 95, duration: '02:40', avgSpeed: 62, maxSpeed: 88, minSpeed: 40,
     alerts: [
       { id: 'b1', type: '急转弯', time: '2026-06-04 08:20' },
       { id: 'b2', type: '急加速', time: '2026-06-04 09:05' },
@@ -290,7 +290,7 @@ const tripData: TripDetail[] = [
     id: 't3', vin: 'LJ8T7AD0000100002', plate: 'PRHM23',
     startTime: '2026-06-11 06:00', endTime: '2026-06-11 07:45',
     startLocation: '智利圣地亚哥普罗维登西亚区新普罗维登西亚街1050号', endLocation: '智利圣地亚哥首都大区阿图罗梅里诺贝尼特斯国际机场',
-    distance: 88, duration: '1小时45分钟', avgSpeed: 73, maxSpeed: 92, minSpeed: 50,
+    distance: 88, duration: '01:45', avgSpeed: 73, maxSpeed: 92, minSpeed: 50,
     alerts: [],
     alertCount: 0,
   },
@@ -298,7 +298,7 @@ const tripData: TripDetail[] = [
     id: 't4', vin: 'LJ8T7AD0000100003', plate: 'SNWK91',
     startTime: '2026-05-25 09:00', endTime: '2026-05-25 12:30',
     startLocation: '智利圣地亚哥圣米格尔区大阿韦尼达街890号', endLocation: '智利奥伊金斯将军大区兰卡瓜市解放者大道901号',
-    distance: 145, duration: '3小时30分钟', avgSpeed: 58, maxSpeed: 85, minSpeed: 35,
+    distance: 145, duration: '03:30', avgSpeed: 58, maxSpeed: 85, minSpeed: 35,
     alerts: [
       { id: 'd1', type: '疲劳驾驶', time: '2026-06-04 11:00' },
       { id: 'd2', type: '超速', time: '2026-06-04 10:30' },
@@ -310,7 +310,7 @@ const tripData: TripDetail[] = [
     id: 't5', vin: 'LJ8T7AD0000100004', plate: 'LMCX44',
     startTime: '2026-06-12 10:00', endTime: '2026-06-12 11:20',
     startLocation: '智利瓦尔帕莱索大区比尼亚德尔马市海滨路789号', endLocation: '智利瓦尔帕莱索大区基略塔市中央大道345号',
-    distance: 65, duration: '1小时20分钟', avgSpeed: 70, maxSpeed: 90, minSpeed: 45,
+    distance: 65, duration: '01:20', avgSpeed: 70, maxSpeed: 90, minSpeed: 45,
     alerts: [
       { id: 'e1', type: '急转弯', time: '2026-06-04 10:35' },
     ],
@@ -320,7 +320,7 @@ const tripData: TripDetail[] = [
     id: 't6', vin: 'LJ8T7AD0000100005', plate: 'VTRJ67',
     startTime: '2026-06-09 05:30', endTime: '2026-06-09 08:00',
     startLocation: '智利圣地亚哥圣贝尔纳多市自由大道1200号', endLocation: '智利圣地亚哥梅利皮亚市港口路560号',
-    distance: 120, duration: '2小时30分钟', avgSpeed: 65, maxSpeed: 82, minSpeed: 38,
+    distance: 120, duration: '02:30', avgSpeed: 65, maxSpeed: 82, minSpeed: 38,
     alerts: [
       { id: 'f1', type: '急加速', time: '2026-06-04 06:10' },
       { id: 'f2', type: '超速', time: '2026-06-04 07:00' },
@@ -333,7 +333,7 @@ const tripData: TripDetail[] = [
     id: 't7', vin: 'LJ8T7AD0000100006', plate: 'HZPY12',
     startTime: '2026-06-08 11:00', endTime: '2026-06-08 13:15',
     startLocation: '智利圣地亚哥普恩特阿尔托区南部大道4500号', endLocation: '智利圣地亚哥兰帕市北部公路2100号',
-    distance: 105, duration: '2小时15分钟', avgSpeed: 75, maxSpeed: 96, minSpeed: 52,
+    distance: 105, duration: '02:15', avgSpeed: 75, maxSpeed: 96, minSpeed: 52,
     alerts: [],
     alertCount: 0,
   },
@@ -341,7 +341,7 @@ const tripData: TripDetail[] = [
     id: 't8', vin: 'LJ8T7AD0000100007', plate: 'QBNF85',
     startTime: '2026-06-07 08:30', endTime: '2026-06-07 11:45',
     startLocation: '智利圣地亚哥拉佛罗里达区瓦兰多街1780号', endLocation: '智利圣地亚哥科利纳市中央广场路680号',
-    distance: 130, duration: '3小时15分钟', avgSpeed: 60, maxSpeed: 78, minSpeed: 30,
+    distance: 130, duration: '03:15', avgSpeed: 60, maxSpeed: 78, minSpeed: 30,
     alerts: [
       { id: 'h1', type: '急减速', time: '2026-06-04 09:15' },
     ],
@@ -351,7 +351,7 @@ const tripData: TripDetail[] = [
     id: 't9', vin: 'LJ8T7AD0000100008', plate: 'DRLG33',
     startTime: '2026-06-11 12:00', endTime: '2026-06-11 14:00',
     startLocation: '智利圣地亚哥韦丘拉巴区改革大道3800号', endLocation: '智利圣地亚哥基利库拉市工业街1100号',
-    distance: 55, duration: '2小时00分钟', avgSpeed: 55, maxSpeed: 80, minSpeed: 25,
+    distance: 55, duration: '02:00', avgSpeed: 55, maxSpeed: 80, minSpeed: 25,
     alerts: [
       { id: 'i1', type: '急加速', time: '2026-06-04 12:30' },
       { id: 'i2', type: '急转弯', time: '2026-06-04 13:00' },
@@ -363,7 +363,7 @@ const tripData: TripDetail[] = [
     id: 't10', vin: 'LJ8T7AD0000100009', plate: 'TWKC79',
     startTime: '2026-05-20 07:00', endTime: '2026-05-20 08:50',
     startLocation: '智利圣地亚哥中央火车站区解放者大道7200号', endLocation: '智利圣地亚哥普达韦尔市机场路4500号',
-    distance: 78, duration: '1小时50分钟', avgSpeed: 68, maxSpeed: 86, minSpeed: 42,
+    distance: 78, duration: '01:50', avgSpeed: 68, maxSpeed: 86, minSpeed: 42,
     alerts: [
       { id: 'j1', type: '急减速', time: '2026-06-04 07:40' },
     ],
@@ -635,57 +635,69 @@ export function addTenantItem(tenant: Omit<TenantItem, 'id'>) {
 }
 
 // --- V1.2 Audit Log mock data ---
-const auditOperationTypes = [
-  '安全与账户-登录', '安全与账户-退出', '安全与账户-修改密码', '安全与账户-重置密码',
-  '租户/权限配置-新增租户', '租户/权限配置-编辑租户', '租户/权限配置-删除租户',
-  '租户/权限配置-新增用户', '租户/权限配置-编辑用户', '租户/权限配置-删除用户',
-  '租户/权限配置-新增角色', '租户/权限配置-权限变更',
-  '资产与车辆管理-同步资产', '资产与车辆管理-资产划拨', '资产与车辆管理-批量导入车辆',
-  '围栏管理-新建围栏', '围栏管理-编辑围栏', '围栏管理-删除围栏', '围栏管理-围栏启停',
-  '维修与服务-新建维修', '维修与服务-一键报修', '维修与服务-完成维修', '维修与服务-删除维修',
-  '数据与导出-导出信号数据', '数据与导出-下载导出文件',
+interface AuditOpMapping {
+  menu: string;
+  function: string;
+  contentTpl: string;
+}
+
+const AUDIT_OP_MAPPINGS: AuditOpMapping[] = [
+  { menu: '账户', function: '登录', contentTpl: '登录系统' },
+  { menu: '账户', function: '退出', contentTpl: '退出系统' },
+  { menu: '账户', function: '修改密码', contentTpl: '修改密码' },
+  { menu: '账户', function: '重置密码', contentTpl: '重置用户 maria.g@stgo-transport.cl 的密码' },
+  { menu: '业务管理', function: '新增租户层级', contentTpl: '新增租户层级【南区运营中心】' },
+  { menu: '业务管理', function: '编辑租户层级', contentTpl: '编辑租户层级【南区运营中心】为【南区运营总部】' },
+  { menu: '业务管理', function: '删除租户层级', contentTpl: '删除租户层级【临时测试层级】' },
+  { menu: '业务管理', function: '配置功能权限', contentTpl: '配置【南区运营中心】的功能权限' },
+  { menu: '业务管理', function: '同步资产', contentTpl: '执行资产同步' },
+  { menu: '业务管理', function: '资产划拨', contentTpl: `将车辆 ${maskVin('LJ8T7AD0000100001')} 从 苇渡根租户 划拨至 Santiago Transport` },
+  { menu: '业务管理', function: '批量资产划拨', contentTpl: '批量资产划拨：将 12 辆车划拨至 智利物流集团' },
+  { menu: '业务管理', function: '删除车辆资产', contentTpl: `删除车辆资产 ${maskVin('LJ8T7AD0000100003')}` },
+  { menu: '业务管理', function: '新增用户', contentTpl: '新增用户 new_operator@wd-logistics.cl，分配角色 Operator' },
+  { menu: '业务管理', function: '编辑用户', contentTpl: '编辑用户 maria_op 信息' },
+  { menu: '业务管理', function: '删除用户', contentTpl: '删除用户 temp_user@test.cl' },
+  { menu: '业务管理', function: '重置密码', contentTpl: '重置用户 maria_op 的密码' },
+  { menu: '业务管理', function: '新增角色', contentTpl: '新增角色 Dispatcher' },
+  { menu: '业务管理', function: '编辑角色', contentTpl: '编辑角色 Operator' },
+  { menu: '业务管理', function: '删除角色', contentTpl: '删除角色 TempRole' },
+  { menu: '业务管理', function: '编辑功能权限', contentTpl: '编辑角色 Operator 的功能权限' },
+  { menu: '租户管理', function: '新增租户', contentTpl: '新增租户【Rancagua Fleet Services】' },
+  { menu: '租户管理', function: '编辑租户', contentTpl: '编辑租户【智利物流集团】信息' },
+  { menu: '租户管理', function: '删除租户', contentTpl: '删除租户【Test Tenant】' },
+  { menu: '租户管理', function: '开通主账号', contentTpl: '为租户【智利物流集团】开通主账号 admin@wd-logistics.cl' },
+  { menu: '车辆管理', function: '批量导入', contentTpl: '批量导入车辆信息：成功 24 条，失败 2 条' },
+  { menu: '围栏管理', function: '新建围栏', contentTpl: '新建围栏【圣地亚哥主干道围栏】，类型【中心围栏】，预警【出栏报警】' },
+  { menu: '围栏管理', function: '编辑围栏', contentTpl: '编辑围栏【Valparaiso Port Area】' },
+  { menu: '围栏管理', function: '删除围栏', contentTpl: '删除围栏【Test Geofence】' },
+  { menu: '围栏管理', function: '启用围栏', contentTpl: '启用围栏【Maipu Logistics Park】' },
+  { menu: '围栏管理', function: '停用围栏', contentTpl: '停用围栏【Maipu Logistics Park】' },
+  { menu: '围栏管理', function: '添加车辆', contentTpl: `为围栏【圣地亚哥中心仓库】添加车辆 ${maskVin('LJ8T7AD0000100005')}` },
+  { menu: '围栏管理', function: '删除车辆', contentTpl: `从围栏【圣地亚哥中心仓库】移除车辆 ${maskVin('LJ8T7AD0000100006')}` },
+  { menu: '风控预警', function: '一键报修（故障类）', contentTpl: `一键报修（故障类）：车辆 ${maskVin('LJ8T7AD0000100003')}，报警类型 VDC故障` },
+  { menu: '风控预警', function: '一键报修（电池类）', contentTpl: `一键报修（电池类）：车辆 ${maskVin('LJ8T7AD0000100005')}，报警类型 SOC过低` },
+  { menu: '维修管理', function: '新建维修', contentTpl: `新建维修记录：车辆 ${maskVin('LJ8T7AD0000100001')}，类型 故障类` },
+  { menu: '维修管理', function: '完成维修', contentTpl: `标记维修完成：车辆 ${maskVin('LJ8T7AD0000100001')}，类型 故障类` },
+  { menu: '维修管理', function: '编辑维修', contentTpl: `编辑维修记录：车辆 ${maskVin('LJ8T7AD0000100002')}` },
+  { menu: '维修管理', function: '删除维修', contentTpl: `删除维修记录：车辆 ${maskVin('LJ8T7AD0000100003')}，类型 电池类` },
+  { menu: '系统管理', function: '新增用户', contentTpl: '新增用户 sys_operator@weidu.cl，分配角色 System Admin' },
+  { menu: '系统管理', function: '编辑用户', contentTpl: '编辑用户 sys_operator 信息' },
+  { menu: '系统管理', function: '删除用户', contentTpl: '删除用户 temp_sys@weidu.cl' },
+  { menu: '系统管理', function: '重置密码', contentTpl: '重置用户 sys_operator 的密码' },
+  { menu: '系统管理', function: '新增角色', contentTpl: '新增角色 System Auditor' },
+  { menu: '系统管理', function: '编辑角色', contentTpl: '编辑角色 System Admin' },
+  { menu: '系统管理', function: '删除角色', contentTpl: '删除角色 Temp Sys Role' },
+  { menu: '系统管理', function: '编辑功能权限', contentTpl: '编辑角色 System Admin 的功能权限' },
+  { menu: '车辆数据', function: '导出车辆信号数据', contentTpl: `导出车辆 ${maskVin('LJ8T7AD0000100001')} 信号数据` },
+  { menu: '车辆数据', function: '下载导出文件', contentTpl: '下载导出文件 vehicle_signal_20260601.csv' },
 ];
 
 const auditNicknames = ['root_admin', 'carlos_admin', 'maria_op', 'juan_mon', 'ana_disp', 'pedro_op', 'sys_op1', 'auditor'];
 const auditAccounts = ['root@weidu.cl', 'carlos.gomez@wd-logistics.cl', 'maria.g@stgo-transport.cl', 'juan.perez@vap-log.cl', 'ana.m@rf-svc.cl', 'pedro.s@qt.cl', 'sysop1@weidu.cl', 'auditor@weidu.cl'];
 const auditTenants = ['苇渡根租户', '智利物流集团', 'Santiago Transport', 'Valparaiso Logistics', 'Rancagua Fleet Services', 'Quillota Transporte'];
-const auditIps = ['192.168.1.10', '10.0.0.55', '172.16.8.100', '192.168.2.33', '10.0.1.77', '203.0.113.42', '198.51.100.18', '10.0.2.99'];
-
-function generateAuditDescription(type: string, nickname: string): string {
-  const vin1 = maskVin('LJ8T7AD0000100001');
-  const vin2 = maskVin('LJ8T7AD0000100003');
-  const descMap: Record<string, string> = {
-    '安全与账户-登录': `用户 ${nickname} 登录系统`,
-    '安全与账户-退出': `用户 ${nickname} 退出登录`,
-    '安全与账户-修改密码': `用户 ${nickname} 修改了登录密码`,
-    '安全与账户-重置密码': `用户 ${nickname} 重置了用户 maria_op 的密码`,
-    '租户/权限配置-新增租户': `用户 ${nickname} 新建了租户 [Rancagua Fleet Services]`,
-    '租户/权限配置-编辑租户': `用户 ${nickname} 编辑了租户 [智利物流集团] 的信息`,
-    '租户/权限配置-删除租户': `用户 ${nickname} 删除了租户 [Test Tenant]`,
-    '租户/权限配置-新增用户': `用户 ${nickname} 新建了用户 [new_operator@wd-logistics.cl]`,
-    '租户/权限配置-编辑用户': `用户 ${nickname} 编辑了用户 [pedro_op] 的信息`,
-    '租户/权限配置-删除用户': `用户 ${nickname} 删除了用户 [temp_user]`,
-    '租户/权限配置-新增角色': `用户 ${nickname} 新建了角色 [Dispatcher]`,
-    '租户/权限配置-权限变更': `用户 ${nickname} 修改了角色 [Operator] 的功能权限`,
-    '资产与车辆管理-同步资产': `用户 ${nickname} 执行了资产同步操作`,
-    '资产与车辆管理-资产划拨': `用户 ${nickname} 将车辆 ${vin1} 从 苇渡根租户 划拨给 Santiago Transport`,
-    '资产与车辆管理-批量导入车辆': `用户 ${nickname} 批量导入了 24 辆车的扩展信息`,
-    '围栏管理-新建围栏': `用户 ${nickname} 新建了围栏 [圣地亚哥主干道围栏]`,
-    '围栏管理-编辑围栏': `用户 ${nickname} 编辑了围栏 [Valparaiso Port Area]`,
-    '围栏管理-删除围栏': `用户 ${nickname} 删除了围栏 [Test Geofence]`,
-    '围栏管理-围栏启停': `用户 ${nickname} 停用了围栏 [Maipu Logistics Park]`,
-    '维修与服务-新建维修': `用户 ${nickname} 手动新建了维修记录`,
-    '维修与服务-一键报修': `用户 ${nickname} 对车辆 ${vin2} 的故障报警执行了一键报修`,
-    '维修与服务-完成维修': `用户 ${nickname} 标记维修记录为已完成`,
-    '维修与服务-删除维修': `用户 ${nickname} 删除了维修记录`,
-    '数据与导出-导出信号数据': `用户 ${nickname} 导出了车辆信号数据`,
-    '数据与导出-下载导出文件': `用户 ${nickname} 下载了导出文件`,
-  };
-  return descMap[type] || `用户 ${nickname} 执行了操作`;
-}
 
 const auditLogData: AuditLog[] = Array.from({ length: 40 }, (_, i) => {
-  const opType = auditOperationTypes[i % auditOperationTypes.length] as string;
+  const mapping = AUDIT_OP_MAPPINGS[i % AUDIT_OP_MAPPINGS.length]!;
   const nickIdx = i % auditNicknames.length;
   const nickname = auditNicknames[nickIdx] as string;
   const isFail = i % 5 === 0;
@@ -699,9 +711,9 @@ const auditLogData: AuditLog[] = Array.from({ length: 40 }, (_, i) => {
     nickname,
     account: auditAccounts[nickIdx] as string,
     tenant: auditTenants[i % auditTenants.length] as string,
-    ip: auditIps[i % auditIps.length] as string,
-    operationType: opType,
-    description: generateAuditDescription(opType, nickname),
+    menu: mapping.menu,
+    function: mapping.function,
+    content: mapping.contentTpl,
     result: isFail ? '失败' : '成功',
     ...(isFail ? { failReason: ['ERR_AUTH_DENIED', 'ERR_NETWORK', 'ERR_PARAM_INVALID', 'ERR_NOT_FOUND'][i % 4] } : {}),
   };

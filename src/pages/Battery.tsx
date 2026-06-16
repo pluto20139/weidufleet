@@ -58,7 +58,7 @@ const Battery: React.FC = () => {
     }),
     datasets: [
       {
-        label: t('battery.kwh', 'kWh'),
+        label: t('battery.kwh_100km', 'kWh/100km'),
         data: dailyConsumption,
         fill: true,
         borderColor: '#2563eb',

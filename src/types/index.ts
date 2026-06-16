@@ -260,18 +260,18 @@ export interface BizRoleItem {
   permissions: string[];
 }
 
-// V1.2 日志审计
+// V1.2 日志审计（修订版）
 export interface AuditLog {
   id: string;
   time: string;           // YYYY-MM-DD HH:mm:ss (Santiago时区)
-  nickname: string;       // 操作人昵称
+  nickname: string;       // 操作人
   account: string;        // 操作账号(邮箱)
   tenant: string;         // 所属租户
-  ip: string;             // 操作IP
-  operationType: string;  // 操作类型 (如 "系统管理-用户管理")
-  description: string;    // 事件描述
+  menu: string;           // 操作菜单（一级菜单名称）
+  function: string;       // 操作功能（具象操作名称）
+  content: string;        // 操作内容（按模板拼装的可读描述）
   result: '成功' | '失败';
-  failReason?: string;
+  failReason?: string;    // 失败原因（失败时展示）
 }
 
 // 车辆详情-风控预警记录tab（23种预警）

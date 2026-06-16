@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Typography, Row, Col, Card, Statistic, Table, Tabs, Tag } from 'antd';
 import {
   CarOutlined,
@@ -21,9 +21,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getDashboardStats, getVehicles, getAlertRanking } from '@/api/mock';
+import type { Vehicle } from '@/types';
 import { formatTime } from '@/utils/format';
 import { maskVin, maskPlate, truncateLocation } from '@/utils/masking';
 
@@ -32,6 +33,19 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const { Title: Ttl } = Typography;
 
 const statCardStyle = { borderRadius: 8, height: '100%' };
+
+// Auto-fit map bounds to show all online vehicles
+const MapBoundsUpdater: React.FC<{ vehicles: Vehicle[] }> = ({ vehicles }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (vehicles.length === 0) return;
+    const bounds = vehicles.map(v => [v.lat, v.lng] as [number, number]);
+    if (bounds.length > 0) {
+      map.fitBounds(bounds as any, { padding: [50, 50] });
+    }
+  }, [vehicles, map]);
+  return null;
+};
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -218,7 +232,6 @@ const Dashboard: React.FC = () => {
             <div style={{ height: 500, borderRadius: 8, overflow: 'hidden' }}>
               <MapContainer
                 center={[-33.45, -70.65]}
-                zoom={11}
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={false}
               >
@@ -226,6 +239,7 @@ const Dashboard: React.FC = () => {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <MapBoundsUpdater vehicles={onlineVehicles} />
                 {onlineVehicles.map((v) => (
                   <CircleMarker
                     key={v.vin}

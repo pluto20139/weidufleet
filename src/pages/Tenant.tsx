@@ -258,7 +258,7 @@ const Tenant: React.FC = () => {
           dataSource={tenants}
           scroll={{ x: 'max-content' }}
           pagination={{
-            defaultPageSize: 20,
+            defaultPageSize: 10,
             pageSizeOptions: ['10', '20', '50', '100'],
             showSizeChanger: true,
             showTotal: (total) => `${total} ${t('common.records')}`,
@@ -318,14 +318,12 @@ const Tenant: React.FC = () => {
           <Form.Item
             name="contact"
             label={t('tenant.contact')}
-            rules={[{ required: true, message: t('tenant.contact') }]}
           >
             <Input placeholder={t('tenant.contact')} />
           </Form.Item>
           <Form.Item
             name="phone"
             label={t('tenant.phone')}
-            rules={[{ required: true, message: t('tenant.phone') }]}
           >
             <Input placeholder={t('tenant.phone')} />
           </Form.Item>
@@ -436,14 +434,12 @@ const Tenant: React.FC = () => {
           <Form.Item
             name="contact"
             label={t('tenant.contact')}
-            rules={[{ required: true, message: t('tenant.contact') }]}
           >
             <Input placeholder={t('tenant.contact')} />
           </Form.Item>
           <Form.Item
             name="phone"
             label={t('tenant.phone')}
-            rules={[{ required: true, message: t('tenant.phone') }]}
           >
             <Input placeholder={t('tenant.phone')} />
           </Form.Item>

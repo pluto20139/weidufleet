@@ -359,12 +359,14 @@ const Biz: React.FC = () => {
             size="small"
             pagination={false}
             columns={[
-              { title: t('tenant.name'), dataIndex: 'tenant', key: 'tenant' },
-              { title: t('biz.sync'), dataIndex: 'syncedDate', key: 'syncedDate' },
+              { title: t('biz.transfer_time', '划拨时间'), dataIndex: 'transferTime', key: 'transferTime' },
+              { title: t('biz.operator', '变更人'), dataIndex: 'operator', key: 'operator' },
+              { title: t('biz.before_tenant', '划拨前租户'), dataIndex: 'beforeTenant', key: 'beforeTenant' },
+              { title: t('biz.after_tenant', '划拨后租户'), dataIndex: 'afterTenant', key: 'afterTenant' },
             ]}
             dataSource={[
-              { id: 'h1', tenant: '智利物流集团', syncedDate: '2026-05-01 10:00' },
-              { id: 'h2', tenant: 'Santiago Transport', syncedDate: '2026-04-15 14:30' },
+              { id: 'h1', beforeTenant: '智利物流集团', afterTenant: 'Santiago Transport', operator: 'Admin', transferTime: '2026-05-01 10:00' },
+              { id: 'h2', beforeTenant: 'Santiago Transport', afterTenant: 'Valparaiso Logistics', operator: 'Carlos', transferTime: '2026-04-15 14:30' },
             ]}
           />
         )}

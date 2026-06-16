@@ -17,7 +17,7 @@ import {
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getRepairItems, addRepairItem } from '@/api/mock';
 import type { RepairItem } from '@/types';
-import { maskVin, maskPlate } from '@/utils/masking';
+import { maskVin, maskPlate, matchPlateSearch } from '@/utils/masking';
 
 const allVehicles = [
   { plate: 'KLTX51', vin: 'LFWDAU1H6N1A00001' },
@@ -53,7 +53,7 @@ const Repair: React.FC = () => {
     let filtered = getRepairItems();
     if (plateFilter) {
       filtered = filtered.filter((r) =>
-        r.plate.toLowerCase().includes(plateFilter.toLowerCase()),
+        matchPlateSearch(plateFilter, r.plate),
       );
     }
     if (typeFilter) {
@@ -293,8 +293,11 @@ const Repair: React.FC = () => {
                 { value: 'CDCU故障', label: 'CDCU故障' },
                 { value: 'BDCU故障', label: 'BDCU故障' },
                 { value: 'ADAS故障', label: 'ADAS故障' },
-                { value: '温度差异报警', label: '温度差异报警' },
+                { value: 'SOC过低', label: 'SOC过低' },
                 { value: '电池高温报警', label: '电池高温报警' },
+                { value: 'SOC跳变', label: 'SOC跳变' },
+                { value: '充电故障', label: '充电故障' },
+                { value: '温度差异报警', label: '温度差异报警' },
               ]}
             />
           </Form.Item>

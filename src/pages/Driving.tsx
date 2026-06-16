@@ -29,13 +29,6 @@ const { Title: Ttl, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const riskLevelColorMap: Record<string, string> = {
-  '安全司机': 'green',
-  '低危司机': 'blue',
-  '中危司机': 'orange',
-  '高危司机': 'red',
-};
-
 const alertTypeLabels: Record<string, string> = {
   'Rapid Accel': '急加速',
   'Hard Brake': '急减速',
@@ -131,15 +124,6 @@ const Driving: React.FC = () => {
       render: (_: unknown, record: DrivingReport) => {
         const info = getLevelInfo(record.score);
         return <Tag color={info.color}>{info.text}</Tag>;
-      },
-    },
-    {
-      title: '风险等级',
-      dataIndex: 'level',
-      key: 'riskLevel',
-      render: (v: string) => {
-        const color = riskLevelColorMap[v] || 'default';
-        return <Tag color={color}>{v}</Tag>;
       },
     },
     {
@@ -275,6 +259,7 @@ const Driving: React.FC = () => {
             value={alertPlate}
             onChange={(e) => setAlertPlate(e.target.value)}
             style={{ width: 160 }}
+            maxLength={8}
           />
           <Select
             placeholder={t('driving.risk_event', '风险事件')}
@@ -399,6 +384,18 @@ const Driving: React.FC = () => {
             <Line data={weeklyRiskData} options={lineChartOptions} />
           </div>
         </Card>
+
+        {/* Scoring Rules Panel */}
+        <Card size="small" title="评分规则" style={{ marginBottom: 16 }}>
+          <Descriptions column={3} size="small">
+            <Descriptions.Item label={t('driving.rapid_accel')}>20%</Descriptions.Item>
+            <Descriptions.Item label={t('driving.hard_brake')}>20%</Descriptions.Item>
+            <Descriptions.Item label={t('driving.sharp_turn')}>20%</Descriptions.Item>
+            <Descriptions.Item label={t('driving.fatigue')}>20%</Descriptions.Item>
+            <Descriptions.Item label={t('driving.aeb')}>20%</Descriptions.Item>
+          </Descriptions>
+        </Card>
+
         <Text type="secondary" style={{ display: 'block', padding: '8px 0' }}>
           <strong>{t('driving.advice')}:</strong> {detailReport.score >= 80 ? t('driving.advice_good') : detailReport.score >= 60 ? t('driving.advice_low') : detailReport.score >= 40 ? t('driving.advice_medium') : t('driving.advice_high')}
         </Text>
