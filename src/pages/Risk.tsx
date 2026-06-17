@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, Table, Tabs, Tag, Button, Input, Select, Row, Col, Space, Typography, message, Modal, Descriptions } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';

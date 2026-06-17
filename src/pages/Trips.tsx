@@ -71,11 +71,6 @@ const Trips: React.FC = () => {
     setTrips(allTrips);
   };
 
-  const handleReset = () => {
-    setPlateFilter('');
-    setTrips(allTrips);
-  };
-
   const showDetail = (trip: TripDetail) => {
     setCurrentTrip(trip);
     setDetailMode(true);

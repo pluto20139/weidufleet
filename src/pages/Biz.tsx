@@ -243,7 +243,7 @@ const Biz: React.FC = () => {
       filtered = filtered.filter((a) => matchVinSearch(vinAssetFilter, a.vin));
     }
     if (tenantAssetFilter && tenantAssetFilter.length > 0) {
-      const filtered = filtered.filter((a) => {
+      filtered = filtered.filter((a) => {
         if (tenantAssetFilter.includes('__unassigned__')) {
           if (!a.tenant) return true;
         }
