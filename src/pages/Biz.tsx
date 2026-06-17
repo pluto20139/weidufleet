@@ -238,7 +238,7 @@ const Biz: React.FC = () => {
 
   // Assets tab -------------------------
   const handleAssetSearch = () => {
-    let filtered = allAssets;
+    let filtered: AssetItem[] = allAssets;
     if (vinAssetFilter) {
       filtered = filtered.filter((a) => matchVinSearch(vinAssetFilter, a.vin));
     }

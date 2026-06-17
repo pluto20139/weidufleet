@@ -431,22 +431,6 @@ const Risk: React.FC = () => {
     battery: t('risk.battery'),
   };
 
-  useEffect(() => {
-    setFenceData(getFenceAlerts());
-    setFaultData(getFaultAlerts());
-    setBatData(getBatteryAlerts());
-  }, [tenant]);
-
-  // Refresh alert data when window regains focus (e.g. returning from Repair page)
-  useEffect(() => {
-    const onFocus = () => {
-      setFaultData(getFaultAlerts());
-      setBatData(getBatteryAlerts());
-    };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, []);
-
   return (
     <div>
       <div style={{ marginBottom: 24 }}>

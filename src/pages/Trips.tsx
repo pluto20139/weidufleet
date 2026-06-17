@@ -65,7 +65,7 @@ const Trips: React.FC = () => {
     setTrips(filtered);
   };
 
-  const handleReset = () => {
+  const handleResetFilter = () => {
     setPlateFilter('');
     setDateRange(null);
     setTrips(allTrips);
@@ -227,7 +227,7 @@ const Trips: React.FC = () => {
           <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
             {t('common.search')}
           </Button>
-          <Button onClick={handleReset}>{t('common.reset')}</Button>
+          <Button onClick={handleResetFilter}>{t('common.reset')}</Button>
         </Space>
       </Card>
 
