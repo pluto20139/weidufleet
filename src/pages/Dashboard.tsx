@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (context: any) => ` ${context.parsed.y}%`,
+            label: (context: any) => ` ${context.parsed.y}`,
           },
         },
       },
@@ -90,7 +90,7 @@ const Dashboard: React.FC = () => {
           beginAtZero: true,
           grid: { color: '#f0f0f0' },
           ticks: {
-            callback: (value: any) => `${value}%`,
+            callback: (value: any) => `${value}`,
           },
         },
         x: { grid: { display: false } },

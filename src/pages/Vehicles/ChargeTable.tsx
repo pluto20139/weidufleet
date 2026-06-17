@@ -12,7 +12,6 @@ const ChargeTable: React.FC = () => {
     durationStr: formatDuration(r.duration),
   })), [rawData]);
   const columns = [
-    { title: t('battery.charges', '累计充电次数'), dataIndex: 'count', key: 'count' },
     { title: t('battery.v', '电压'), dataIndex: 'v', key: 'v', render: (v: number) => `${v}V` },
     { title: t('battery.a', '电流'), dataIndex: 'a', key: 'a', render: (v: number) => `${v}A` },
     { title: t('battery.kw', '功率'), dataIndex: 'kw', key: 'kw', render: (v: number) => `${v}kW` },
