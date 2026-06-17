@@ -319,9 +319,9 @@ const Driving: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Charts Row: only mileage trend + area distribution + suggestions */}
+        {/* Charts Row: mileage trend + area distribution */}
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={12}>
             <Card size="small" title={t('driving.mileage', '行驶里程趋势')} style={{ marginBottom: 16 }}>
               <div style={{ height: 180 }}>
                 <Line data={{
@@ -340,47 +340,36 @@ const Driving: React.FC = () => {
               </div>
             </Card>
           </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Card size="small" title={t('driving.area_distribution')} style={{ marginBottom: 16 }}>
               <div style={{ height: 180 }}>
                 <Bar data={{
-                  labels: detailReport.regionDistribution?.map(r => r.city) || [t('city.santiago', '圣地亚哥'), t('city.valparaiso', '瓦尔帕莱索'), t('city.concepcion', '康塞普西翁'), t('city.rancagua', '兰卡瓜'), t('city.quillota', '基约塔')],
+                  labels: detailReport.regionDistribution?.map(r => r.city.replace(/\s*\(.*\)$/, '')) || [t('city.santiago', '圣地亚哥'), t('city.valparaiso', '瓦尔帕莱索'), t('city.concepcion', '康塞普西翁'), t('city.rancagua', '兰卡瓜'), t('city.quillota', '基约塔')],
                   datasets: [{
                     label: t('driving.mileage', '行驶里程'),
                     data: detailReport.regionDistribution?.map(r => r.km) || [285, 120, 95, 60, 45],
-                    backgroundColor: ['#2563eb', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'],
+                    backgroundColor: '#2563eb',
                     borderWidth: 0,
                   }],
                 }} options={chartOptions} />
               </div>
             </Card>
           </Col>
-          <Col span={8}>
-            <Card size="small" title={t('driving.advice', '驾驶改善建议')} style={{ marginBottom: 16 }}>
-              <div style={{ height: 180, overflowY: 'auto', padding: '4px 8px' }}>
-                <ul style={{ paddingLeft: 16, margin: 0 }}>
-                  {(detailReport.suggestions?.length ? detailReport.suggestions : (
-                    detailReport.score >= 80
-                      ? ['继续保持良好驾驶习惯', '建议每两周查看一次报告']
-                      : detailReport.score >= 60
-                      ? ['注意控制车速，减少急加速/急减速', '建议每周查看一次报告']
-                      : ['需要改善驾驶行为，频繁的急加速/急减速影响安全', '建议立即参加驾驶培训', '建议每日查看报告']
-                  )).map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-            </Card>
-          </Col>
         </Row>
 
-        {/* Scoring Rules Panel */}
-        <Card size="small" title="评分规则" style={{ marginBottom: 16 }}>
-          <Descriptions column={3} size="small">
-            <Descriptions.Item label={t('driving.rapid_accel')}>20%</Descriptions.Item>
-            <Descriptions.Item label={t('driving.hard_brake')}>20%</Descriptions.Item>
-            <Descriptions.Item label={t('driving.sharp_turn')}>20%</Descriptions.Item>
-            <Descriptions.Item label={t('driving.fatigue')}>20%</Descriptions.Item>
-            <Descriptions.Item label={t('driving.aeb')}>20%</Descriptions.Item>
-          </Descriptions>
+        {/* Suggestions */}
+        <Card size="small" title={t('driving.advice', '驾驶改善建议')} style={{ marginBottom: 16 }}>
+          <div style={{ height: 120, overflowY: 'auto', padding: '4px 8px' }}>
+            <ul style={{ paddingLeft: 16, margin: 0 }}>
+              {(detailReport.suggestions?.length ? detailReport.suggestions : (
+                detailReport.score >= 80
+                  ? ['继续保持良好驾驶习惯', '建议每两周查看一次报告']
+                  : detailReport.score >= 60
+                  ? ['注意控制车速，减少急加速/急减速', '建议每周查看一次报告']
+                  : ['需要改善驾驶行为，频繁的急加速/急减速影响安全', '建议立即参加驾驶培训', '建议每日查看报告']
+              )).map((s, i) => <li key={i}>{s}</li>)}
+            </ul>
+          </div>
         </Card>
       </div>
     );

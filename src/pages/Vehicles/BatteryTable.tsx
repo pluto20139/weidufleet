@@ -28,7 +28,6 @@ const BatteryTable: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => {
         return map[v] || v;
       },
     },
-    { title: t('common.record_time', '记录时间'), dataIndex: 'time', key: 'time' },
   ];
   return <Table dataSource={data} columns={columns} rowKey="time" size="small" scroll={{ x: 'max-content' }} pagination={{ defaultPageSize: 20, pageSizeOptions: ['10', '20', '50', '100'], showSizeChanger: true }} />;
 };

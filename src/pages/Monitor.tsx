@@ -110,7 +110,7 @@ const Monitor: React.FC = () => {
       title: `${tName} (${list.length})`,
       key: `tenant-${tName}`,
       children: list.map((v) => ({
-        title: <span>{maskPlate(v.plate)} <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag></span>,
+        title: <span><span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag></span>,
         key: `vehicle-${v.vin}`,
         isLeaf: true,
       })),
@@ -232,7 +232,7 @@ const Monitor: React.FC = () => {
               >
                 <Space size={4}>
                   <span style={{ fontSize: 10, color: '#94a3b8' }}>●</span>
-                  {maskPlate(v.plate)}
+                  <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag>
                 </Space>
               </div>
             ))}

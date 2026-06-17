@@ -13,15 +13,6 @@ const driveAlertMap: Record<string, string> = {
   'AEB Pedestrian': '对行人AEB制动',
 };
 
-const driveContentMap: Record<string, string> = {
-  'L1 Vehicle': '前方车辆距离较近，请注意',
-  'L2 Urgent': '前方车辆紧急制动，请立即减速',
-  'AEB Brake': 'AEB自动紧急制动已触发',
-  'L1 Pedestrian': '前方行人检测预警',
-  'L2 Pedestrian': '行人紧急危险，请立即制动',
-  'AEB Pedestrian': 'AEB行人自动制动已触发',
-};
-
 const drivingLocations = [
   '智利圣地亚哥首都大区圣地亚哥市阿乌马达步行街234号',
   '智利瓦尔帕莱索大区瓦尔帕莱索港码头大道150号',
@@ -37,14 +28,12 @@ const DrivingTable: React.FC = () => {
   const data = useMemo(() => rawData.map((r, i) => ({
     ...r,
     alertName: driveAlertMap[r.alert] || r.alert,
-    alertContent: driveContentMap[r.alert] || '—',
     speed: `${(r as any).speed || Math.floor(60 + Math.random() * 30)}km/h`,
     position: drivingLocations[i % drivingLocations.length]!,
   })), [rawData]);
 
   const columns = [
-    { title: '预警名称', dataIndex: 'alertName', key: 'alertName' },
-    { title: '预警内容', dataIndex: 'alertContent', key: 'alertContent' },
+    { title: '预警类型', dataIndex: 'alertName', key: 'alertName' },
     { title: t('risk.alert_time', '预警时间'), dataIndex: 'time', key: 'time' },
     { title: '预警位置', dataIndex: 'position', key: 'position', render: (v: string) => <LocationPrivacy text={v} /> },
     { title: '行车速度', dataIndex: 'speed', key: 'speed' },
