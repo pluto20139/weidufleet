@@ -10,14 +10,18 @@ import {
   Modal,
   Form,
   Tree,
+  TreeSelect,
   Checkbox,
   Descriptions,
   Space,
   Row,
   Col,
+  Radio,
   message,
+  Tooltip,
+  Typography,
 } from 'antd';
-import { SearchOutlined, PlusOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SearchOutlined, PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { TreeDataNode, CheckboxChangeEvent } from 'antd';
 import { useAppStore } from '@/store/useAppStore';
 import type { AssetItem, BizUserItem } from '@/types';
@@ -101,10 +105,10 @@ const allBizUsers: BizUserItem[] = [
 ];
 
 const rolesData = [
-  { id: 'br1', name: 'Admin', type: 'admin', permissions: ['Vehicles', 'Risk', 'Driving', 'Battery', 'Trips', 'Fence', 'Maintenance', 'Monitor', 'Tenant Config', 'User Mgmt', 'Role Mgmt', 'Asset Allocation'] },
-  { id: 'br2', name: 'Operator', type: 'operator', permissions: ['Vehicles', 'Risk', 'Driving', 'Battery', 'Trips', 'Fence', 'Maintenance'] },
-  { id: 'br3', name: 'Monitor', type: 'monitor', permissions: ['Monitor', 'Vehicles (Read)', 'Trips (Read)', 'Risk (Read)'] },
-  { id: 'br4', name: 'Dispatcher', type: 'dispatcher', permissions: ['Vehicles', 'Trips', 'Monitor', 'Fence', 'Driving'] },
+  { id: 'br1', name: 'Admin', type: 'admin', permissions: ['Vehicles', 'Risk', 'Driving', 'Battery', 'Trips', 'Fence', 'Maintenance', 'Monitor', 'Tenant Config', 'User Mgmt', 'Role Mgmt', 'Asset Allocation'], linkedUserCount: 1 },
+  { id: 'br2', name: 'Operator', type: 'operator', permissions: ['Vehicles', 'Risk', 'Driving', 'Battery', 'Trips', 'Fence', 'Maintenance'], linkedUserCount: 2 },
+  { id: 'br3', name: 'Monitor', type: 'monitor', permissions: ['Monitor', 'Vehicles (Read)', 'Trips (Read)', 'Risk (Read)'], linkedUserCount: 1 },
+  { id: 'br4', name: 'Dispatcher', type: 'dispatcher', permissions: ['Vehicles', 'Trips', 'Monitor', 'Fence', 'Driving'], linkedUserCount: 1 },
 ];
 
 const tenantsList = ['智利物流集团', 'Santiago Transport', 'Valparaiso Logistics', 'Rancagua Fleet Services', 'Quillota Transporte'];
@@ -123,6 +127,9 @@ const roleDescs: Record<string, string> = {
   dispatcher: 'biz.role_desc_dispatcher',
 };
 
+const getAllTreeKeys = (nodes: TreeDataNode[]): string[] =>
+  nodes.flatMap(n => [n.key as string, ...(n.children ? getAllTreeKeys(n.children) : [])]);
+
 // ============ Component ============
 const Biz: React.FC = () => {
   const { t } = useTranslation();
@@ -132,6 +139,9 @@ const Biz: React.FC = () => {
 
   // Permissions state
   const [checkedPerms, setCheckedPerms] = useState<string[]>(['Vehicles', 'Risk']);
+  const [selectedTenantKey, setSelectedTenantKey] = useState<string>('root');
+  const [selectedRoleTenantKey, setSelectedRoleTenantKey] = useState<string>('root');
+  const [permTreeModal, setPermTreeModal] = useState<{ open: boolean; mode: 'add' | 'edit'; parentKey: string; editKey?: string; editName?: string }>({ open: false, mode: 'add', parentKey: '' });
 
   // Assets state
   const [assets, setAssets] = useState<AssetItem[]>([]);
@@ -145,6 +155,14 @@ const Biz: React.FC = () => {
   const [selectedAssetKeys, setSelectedAssetKeys] = useState<React.Key[]>([]);
   const [assetModal, setAssetModal] = useState<{ visible: boolean; type: string; record: AssetItem | null }>({ visible: false, type: '', record: null });
   const [syncLoading, setSyncLoading] = useState(false);
+  const [assetSyncTimeRange, setAssetSyncTimeRange] = useState<[any, any] | null>(null);
+
+  const handleResetAssets = () => {
+    setVinAssetFilter('');
+    setTenantAssetFilter(undefined);
+    setAssetSyncTimeRange(null);
+    setAssets(getAssetItems());
+  };
 
   const handleDeleteAsset = (record: AssetItem) => {
     const vehicleList = [
@@ -185,28 +203,65 @@ const Biz: React.FC = () => {
   const [users, setUsers] = useState<BizUserItem[]>(allBizUsers);
   const [nickFilter, setNickFilter] = useState('');
   const [emailFilter, setEmailFilter] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string[] | undefined>(undefined);
+  const [userDateRange, setUserDateRange] = useState<[any, any] | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<BizUserItem | null>(null);
   const [userForm] = Form.useForm();
+  const [resetPwdModal, setResetPwdModal] = useState<{ open: boolean; user: BizUserItem | null; newPwd: string }>({ open: false, user: null, newPwd: '' });
 
   // Roles state
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [roleForm] = Form.useForm();
+  const [selectedBizRoleId, setSelectedBizRoleId] = useState<string | null>(null);
+  const [bizRoleActiveTab, setBizRoleActiveTab] = useState<'function' | 'data'>('function');
+  const [bizEditingPerms, setBizEditingPerms] = useState<string[]>([]);
+  const [bizEditingDataScope, setBizEditingDataScope] = useState('全部下级租户');
+  const [bizInlineEditing, setBizInlineEditing] = useState<{ name: string; isEdit: boolean; editId?: string } | null>(null);
+
+  const selectedBizRole = rolesData.find(r => r.id === selectedBizRoleId) || null;
 
   // Permissions tab --------------------
   const onPermCheckChange = (values: string[]) => {
     setCheckedPerms(values);
   };
 
+  const handlePermTreeAdd = (parentKey: string) => {
+    const name = window.prompt('请输入名称');
+    if (name?.trim()) message.success(`已添加: ${name}`);
+  };
+  const handlePermTreeEdit = (key: string, currentName: string) => {
+    const name = window.prompt('修改名称', currentName);
+    if (name?.trim()) message.success(`已修改: ${name}`);
+  };
+  const handlePermTreeDelete = (key: string) => {
+    Modal.confirm({ title: '确认删除', content: '如果存在下级时不可删除，是否继续？', onOk: () => message.success('删除成功') });
+  };
+
+  const renderPermTreeNode = (nodes: TreeDataNode[]): TreeDataNode[] => nodes.map(node => ({
+    ...node,
+    title: (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <span>{String(node.title)}</span>
+        {node.key !== 'root' && (
+          <Space size={2} onClick={e => e.stopPropagation()}>
+            <Button type="text" size="small" icon={<EditOutlined style={{ fontSize: 12 }} />} onClick={() => handlePermTreeEdit(node.key as string, String(node.title))} />
+            <Button type="text" size="small" danger icon={<DeleteOutlined style={{ fontSize: 12 }} />} onClick={() => handlePermTreeDelete(node.key as string)} />
+          </Space>
+        )}
+        {node.key !== 'root' && !node.children?.length && (
+          <Button type="text" size="small" icon={<PlusOutlined style={{ fontSize: 12 }} />} onClick={(e) => { e.stopPropagation(); handlePermTreeAdd(node.key as string); }} />
+        )}
+      </div>
+    ),
+    children: node.children ? renderPermTreeNode(node.children) : undefined,
+  }));
+
   const renderPermissionsTab = () => (
     <Row gutter={16}>
       <Col span={6}>
-        <Card title={t('biz.tenant_hierarchy')} size="small">
-          <Tree
-            defaultExpandAll
-            treeData={tenantTreeData}
-            onSelect={(keys) => console.log('selected tenant:', keys)}
-          />
+        <Card title={t('biz.tenant_hierarchy')} size="small" extra={<Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => handlePermTreeAdd('root')}>添加</Button>}>
+          <Tree defaultExpandAll treeData={renderPermTreeNode(tenantTreeData)} onSelect={(keys) => console.log('selected tenant:', keys)} />
         </Card>
       </Col>
       <Col span={18}>
@@ -222,25 +277,50 @@ const Biz: React.FC = () => {
   );
 
   // Info tab ---------------------------
+  const [infoTreeSearch, setInfoTreeSearch] = useState('');
+
+  const filterInfoTree = (nodes: TreeDataNode[], keyword: string): TreeDataNode[] => {
+    if (!keyword) return nodes;
+    return nodes.reduce<TreeDataNode[]>((acc, node) => {
+      const title = String(node.title);
+      const filteredChildren = node.children ? filterInfoTree(node.children, keyword) : [];
+      if (title.toLowerCase().includes(keyword.toLowerCase()) || filteredChildren.length > 0) {
+        acc.push({ ...node, children: filteredChildren.length > 0 ? filteredChildren : node.children });
+      }
+      return acc;
+    }, []);
+  };
+
   const renderInfoTab = () => (
-    <Card title={t('biz.info_title')}>
-      <Descriptions column={2} bordered size="small">
-        <Descriptions.Item label={t('tenant.name')}>{tenantInfo.name}</Descriptions.Item>
-        <Descriptions.Item label={t('tenant.code')}>{tenantInfo.code}</Descriptions.Item>
-        <Descriptions.Item label={t('tenant.admin')}>{tenantInfo.admin}</Descriptions.Item>
-        <Descriptions.Item label={t('tenant.contact')}>{tenantInfo.contact}</Descriptions.Item>
-        <Descriptions.Item label={t('tenant.phone')}>{tenantInfo.phone}</Descriptions.Item>
-        <Descriptions.Item label={t('fence.address')}>{tenantInfo.address}</Descriptions.Item>
-        <Descriptions.Item label={t('tenant.created')}>{tenantInfo.created}</Descriptions.Item>
-      </Descriptions>
-    </Card>
+    <Row gutter={16}>
+      <Col span={6}>
+        <Card title={t('biz.tenant_hierarchy')} size="small">
+          <Input placeholder="搜索租户" value={infoTreeSearch} onChange={e => setInfoTreeSearch(e.target.value)} style={{ marginBottom: 8 }} allowClear />
+          <Tree defaultExpandAll treeData={filterInfoTree(tenantTreeData, infoTreeSearch)}
+            onSelect={(keys) => { if (keys.length) console.log('info tenant selected:', keys); }} />
+        </Card>
+      </Col>
+      <Col span={18}>
+        <Card title={t('biz.info_title')}>
+          <Descriptions column={2} bordered size="small">
+            <Descriptions.Item label={t('tenant.name')}>{tenantInfo.name}</Descriptions.Item>
+            <Descriptions.Item label={t('tenant.code')}>{tenantInfo.code}</Descriptions.Item>
+            <Descriptions.Item label={t('tenant.admin')}>{tenantInfo.admin}</Descriptions.Item>
+            <Descriptions.Item label={t('tenant.contact')}>{tenantInfo.contact}</Descriptions.Item>
+            <Descriptions.Item label={t('tenant.phone')}>{tenantInfo.phone}</Descriptions.Item>
+            <Descriptions.Item label={t('fence.address')}>{tenantInfo.address}</Descriptions.Item>
+            <Descriptions.Item label={t('tenant.created')}>{tenantInfo.created}</Descriptions.Item>
+          </Descriptions>
+        </Card>
+      </Col>
+    </Row>
   );
 
   // Assets tab -------------------------
   const handleAssetSearch = () => {
-    let filtered = allAssets;
+    let filtered = [...getAssetItems()];
     if (vinAssetFilter) {
-      filtered = filtered.filter((a) => matchVinSearch(vinAssetFilter, a.vin));
+      filtered = filtered.filter((a) => a.vin.toLowerCase() === vinAssetFilter.toLowerCase());
     }
     if (tenantAssetFilter && tenantAssetFilter.length > 0) {
       filtered = filtered.filter((a) => {
@@ -252,6 +332,14 @@ const Biz: React.FC = () => {
           return tenantFilters.includes(a.tenant);
         }
         return !a.tenant && tenantAssetFilter.includes('__unassigned__');
+      });
+    }
+    if (assetSyncTimeRange && assetSyncTimeRange[0] && assetSyncTimeRange[1]) {
+      const start = assetSyncTimeRange[0];
+      const end = assetSyncTimeRange[1];
+      filtered = filtered.filter((a) => {
+        const d = (a as any).syncedDate ? (a as any).syncedDate.slice(0, 10) : '';
+        return d >= start.format('YYYY-MM-DD') && d <= end.format('YYYY-MM-DD');
       });
     }
     setAssets(filtered);
@@ -314,18 +402,20 @@ const Biz: React.FC = () => {
             onChange={(e) => setVinAssetFilter(e.target.value)}
             style={{ width: 180 }}
           />
-          <Select
+          <TreeSelect
             placeholder={t('biz.all_tenants')}
             allowClear
-            mode="multiple"
+            multiple
+            treeCheckable
+            showCheckedStrategy={TreeSelect.SHOW_PARENT}
             style={{ width: 260 }}
             value={tenantAssetFilter}
             onChange={setTenantAssetFilter}
-            options={[...tenantsList.map((tn) => ({ value: tn, label: tn })), { value: '__unassigned__', label: '未划拨' }]}
+            treeData={[...tenantTreeData.map(n => ({ title: String(n.title), value: String(n.key), children: n.children?.map(c => ({ title: String(c.title), value: String(c.key) })) })), { title: '未划拨', value: '__unassigned__' }]}
           />
-          <Button type="primary" icon={<SearchOutlined />} onClick={handleAssetSearch}>
-            {t('common.search')}
-          </Button>
+          <DatePicker.RangePicker format="YYYY-MM-DD" onChange={(dates) => setAssetSyncTimeRange(dates)} />
+          <Button type="primary" icon={<SearchOutlined />} onClick={handleAssetSearch}>{t('common.search')}</Button>
+          <Button onClick={handleResetAssets}>{t('common.reset')}</Button>
           <Button icon={<ReloadOutlined />} loading={syncLoading} onClick={handleSyncAssets}>{t('biz.sync', '同步')}</Button>
         </Space>
       </Card>
@@ -408,7 +498,23 @@ const Biz: React.FC = () => {
     if (emailFilter) {
       filtered = filtered.filter((u) => u.email.toLowerCase().includes(emailFilter.toLowerCase()));
     }
+    if (userRoleFilter && userRoleFilter.length > 0) {
+      filtered = filtered.filter((u) => userRoleFilter.includes(u.role));
+    }
+    if (userDateRange && userDateRange[0] && userDateRange[1]) {
+      const start = userDateRange[0].format('YYYY-MM-DD');
+      const end = userDateRange[1].format('YYYY-MM-DD');
+      filtered = filtered.filter((u) => u.created >= start && u.created <= end);
+    }
     setUsers(filtered);
+  };
+
+  const handleResetUsers = () => {
+    setNickFilter('');
+    setEmailFilter('');
+    setUserRoleFilter(undefined);
+    setUserDateRange(null);
+    setUsers(allBizUsers);
   };
 
   const handleUserSave = () => {
@@ -451,7 +557,39 @@ const Biz: React.FC = () => {
     setUserModalOpen(true);
   };
 
+  const handleResetPwd = (user: BizUserItem) => {
+    Modal.confirm({
+      title: '确认重置密码',
+      content: `确认将用户 ${user.nickname} 的密码重置为初始密码？`,
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const newPwd = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        setResetPwdModal({ open: true, user, newPwd });
+      },
+    });
+  };
+
+  const handleDeleteUser = (user: BizUserItem) => {
+    if (user.role === 'Admin') {
+      message.warning('管理员角色账号不可删除');
+      return;
+    }
+    Modal.confirm({
+      title: '确认删除',
+      content: '删除后数据无法恢复，是否继续？',
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => {
+        setUsers(prev => prev.filter(u => u.id !== user.id));
+        message.success('删除成功');
+      },
+    });
+  };
+
   const userColumns = [
+    { title: t('tenant.index', '序号'), width: 60, render: (_: unknown, __: unknown, i: number) => i + 1 },
     { title: t('tenant.nickname'), dataIndex: 'nickname', key: 'nickname' },
     { title: t('tenant.email'), dataIndex: 'email', key: 'email' },
     {
@@ -468,48 +606,47 @@ const Biz: React.FC = () => {
       key: 'action',
       render: (_: unknown, record: BizUserItem) => (
         <Space>
-          <Button type="link">{t('biz.action.reset')}</Button>
-          <Button type="link" onClick={() => openEditUser(record)}>
-            {t('biz.action.edit')}
-          </Button>
-          <Button type="link" danger>{t('biz.action.del')}</Button>
+          <Button type="link" onClick={() => handleResetPwd(record)}>{t('biz.action.reset')}</Button>
+          <Button type="link" onClick={() => openEditUser(record)}>{t('biz.action.edit')}</Button>
+          {record.role === 'Admin' ? (
+            <Tooltip title="管理员角色账号不可删除"><Button type="link" danger disabled>{t('biz.action.del')}</Button></Tooltip>
+          ) : (
+            <Button type="link" danger onClick={() => handleDeleteUser(record)}>{t('biz.action.del')}</Button>
+          )}
         </Space>
       ),
     },
   ];
 
   const renderUsersTab = () => (
-    <div>
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <Space wrap>
-          <Input
-            placeholder={t('tenant.nickname')}
-            value={nickFilter}
-            onChange={(e) => setNickFilter(e.target.value)}
-            style={{ width: 160 }}
-          />
-          <Input
-            placeholder={t('tenant.email')}
-            value={emailFilter}
-            onChange={(e) => setEmailFilter(e.target.value)}
-            style={{ width: 220 }}
-          />
-          <Button type="primary" icon={<SearchOutlined />} onClick={handleUserSearch}>
-            {t('common.search')}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openNewUser}>
-            {t('common.add')}
-          </Button>
-        </Space>
-      </Card>
-      <Card>
-        <Table
-          rowKey="id"
-          columns={userColumns}
-          dataSource={users}
-          pagination={{ showTotal: (total) => `${total} ${t('common.records')}` }}
-        />
-      </Card>
+    <>
+    <Row gutter={16}>
+      <Col span={6}>
+        <Card title={t('biz.tenant_hierarchy')} size="small">
+          <Tree defaultExpandAll treeData={tenantTreeData} selectedKeys={[selectedTenantKey]}
+            onSelect={(keys) => { if (keys.length) setSelectedTenantKey(keys[0] as string); }} />
+        </Card>
+      </Col>
+      <Col span={18}>
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <Space wrap>
+            <Input placeholder={t('tenant.nickname')} value={nickFilter} onChange={(e) => setNickFilter(e.target.value)} style={{ width: 140 }} />
+            <Input placeholder={t('tenant.email')} value={emailFilter} onChange={(e) => setEmailFilter(e.target.value)} style={{ width: 180 }} />
+            <Select mode="multiple" placeholder={t('tenant.role')} allowClear style={{ width: 180 }}
+              value={userRoleFilter} onChange={setUserRoleFilter}
+              options={rolesData.map(r => ({ value: r.name, label: r.name }))} />
+            <DatePicker.RangePicker format="YYYY-MM-DD" onChange={(dates) => setUserDateRange(dates)} />
+            <Button type="primary" icon={<SearchOutlined />} onClick={handleUserSearch}>{t('common.search')}</Button>
+            <Button onClick={handleResetUsers}>{t('common.reset')}</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openNewUser}>{t('common.add')}</Button>
+          </Space>
+        </Card>
+        <Card>
+          <Table rowKey="id" columns={userColumns} dataSource={users}
+            pagination={{ showTotal: (total) => `${total} ${t('common.records')}` }} />
+        </Card>
+      </Col>
+    </Row>
 
       <Modal
         title={editingUser ? t('biz.edit_user') : t('biz.create_user')}
@@ -548,87 +685,258 @@ const Biz: React.FC = () => {
           >
             <Select
               options={[
-                { value: 'Admin', label: 'Admin' },
+                { value: 'Admin', label: 'Admin', disabled: editingUser?.role === 'Admin' },
                 { value: 'Operator', label: 'Operator' },
                 { value: 'Monitor', label: 'Monitor' },
                 { value: 'Dispatcher', label: 'Dispatcher' },
               ]}
+              disabled={editingUser?.role === 'Admin'}
             />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+
+      {/* Reset Password Result Modal */}
+      <Modal
+        title="密码已重置"
+        open={resetPwdModal.open}
+        onOk={() => setResetPwdModal({ open: false, user: null, newPwd: '' })}
+        onCancel={() => setResetPwdModal({ open: false, user: null, newPwd: '' })}
+        okText={t('common.done')}
+        cancelText={t('common.close')}
+      >
+        <Card size="small" style={{ background: '#f6ffed', marginTop: 12 }}>
+          <p><strong>{t('tenant.nickname')}:</strong> {resetPwdModal.user?.nickname}</p>
+          <p><strong>{t('tenant.email')}:</strong> {resetPwdModal.user?.email}</p>
+          <p><strong>{t('tenant.password')}:</strong> {resetPwdModal.newPwd}</p>
+        </Card>
+        <Button
+          type="primary"
+          style={{ marginTop: 12 }}
+          onClick={() => {
+            if (resetPwdModal.user) {
+              navigator.clipboard.writeText(`邮箱:${resetPwdModal.user.email}\n密码:${resetPwdModal.newPwd}`);
+              message.success('复制成功');
+            }
+          }}
+        >
+          复制信息
+        </Button>
+      </Modal>
+    </>
   );
 
   // Roles tab --------------------------
+  const handleSelectBizRole = (keys: any[]) => {
+    if (keys.length === 0) return;
+    const roleId = keys[0] as string;
+    const role = rolesData.find(r => r.id === roleId);
+    if (!role) return;
+    setSelectedBizRoleId(roleId);
+    setBizEditingPerms([...role.permissions]);
+    setBizEditingDataScope('全部下级租户');
+    setBizRoleActiveTab('function');
+  };
+
+  const handleBizRoleSavePerms = () => {
+    if (!selectedBizRoleId) return;
+    message.success('保存成功');
+  };
+
+  const handleBizRoleCancelPerms = () => {
+    if (selectedBizRole) {
+      setBizEditingPerms([...selectedBizRole.permissions]);
+      setBizEditingDataScope('全部下级租户');
+    }
+  };
+
+  const handleDeleteBizRole = (role: typeof rolesData[0]) => {
+    if (role.type === 'admin') {
+      message.warning('管理员角色不可删除');
+      return;
+    }
+    const content = role.linkedUserCount && role.linkedUserCount > 0
+      ? '该角色已关联用户，删除后用户无相关权限，是否继续？'
+      : '删除后数据无法恢复，是否继续？';
+    Modal.confirm({
+      title: '确认要删除该角色吗？',
+      icon: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
+      content: <span style={{ color: '#ff4d4f' }}>{content}</span>,
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => message.success('删除成功'),
+    });
+  };
+
+  const handleBizInlineConfirm = () => {
+    if (!bizInlineEditing) return;
+    const name = bizInlineEditing.name.trim();
+    if (!name) { message.warning('请输入角色名称'); return; }
+    const nameExists = rolesData.some(r => r.name === name && r.id !== bizInlineEditing.editId);
+    if (nameExists) { message.error('角色名称已存在，请更换'); return; }
+    message.success(bizInlineEditing.isEdit ? '修改成功' : '创建成功');
+    setBizInlineEditing(null);
+  };
+
+  const bizRoleTreeData = rolesData.map(role => {
+    const isEditing = bizInlineEditing?.isEdit && bizInlineEditing.editId === role.id;
+    if (isEditing) {
+      return {
+        title: (
+          <Space size={4}>
+            <Input size="small" value={bizInlineEditing.name}
+              onChange={e => setBizInlineEditing(prev => prev ? { ...prev, name: e.target.value } : null)}
+              placeholder="请输入角色名称" style={{ width: 140 }} maxLength={10} onPressEnter={handleBizInlineConfirm} />
+            <Button type="text" size="small" icon={<CheckOutlined style={{ color: '#52c41a' }} />} onClick={handleBizInlineConfirm} />
+            <Button type="text" size="small" icon={<CloseOutlined style={{ color: '#ff4d4f' }} />} onClick={() => setBizInlineEditing(null)} />
+          </Space>
+        ),
+        key: role.id,
+        isLeaf: true,
+      };
+    }
+    return {
+      title: (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '2px 0', background: selectedBizRoleId === role.id ? '#e6f4ff' : 'transparent', borderRadius: 4 }}>
+          <span>{role.name}</span>
+          <Space size={2} style={{ marginLeft: 8 }} onClick={e => e.stopPropagation()}>
+            {role.type === 'admin' ? (
+              <Tooltip title="管理员角色不可编辑">
+                <Button type="text" size="small" icon={<EditOutlined style={{ fontSize: 12 }} />} disabled />
+              </Tooltip>
+            ) : (
+              <Tooltip title="编辑">
+                <Button type="text" size="small" icon={<EditOutlined style={{ fontSize: 12 }} />} onClick={() => setBizInlineEditing({ name: role.name, isEdit: true, editId: role.id })} />
+              </Tooltip>
+            )}
+            {role.type === 'admin' ? (
+              <Tooltip title="管理员角色不可删除">
+                <Button type="text" size="small" icon={<DeleteOutlined style={{ fontSize: 12 }} />} disabled />
+              </Tooltip>
+            ) : (
+              <Tooltip title="删除">
+                <Button type="text" size="small" danger icon={<DeleteOutlined style={{ fontSize: 12 }} />} onClick={() => handleDeleteBizRole(role)} />
+              </Tooltip>
+            )}
+          </Space>
+        </div>
+      ),
+      key: role.id,
+      isLeaf: true,
+    };
+  });
+
+  const bizPermTreeData = [
+    { title: '业务功能', key: 'biz_funcs', children: functionPermissions.map(p => ({ title: t(permI18nMap[p] || p), key: p })) },
+    { title: '管理功能', key: 'admin_funcs', children: [
+      { title: '租户配置', key: 'Tenant Config' },
+      { title: '用户管理', key: 'User Mgmt' },
+      { title: '角色管理', key: 'Role Mgmt' },
+      { title: '资产分配', key: 'Asset Allocation' },
+    ]},
+  ];
+
   const renderRolesTab = () => (
-    <div>
+    <Row gutter={16}>
+      <Col span={6}>
+        <Card title={t('biz.tenant_hierarchy')} size="small">
+          <Tree defaultExpandAll treeData={tenantTreeData} selectedKeys={[selectedRoleTenantKey]}
+            onSelect={(keys) => { if (keys.length) setSelectedRoleTenantKey(keys[0] as string); }} />
+        </Card>
+      </Col>
+      <Col span={18}>
       <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setRoleModalOpen(true)}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setBizInlineEditing({ name: '', isEdit: false })}>
           {t('biz.new_role')}
         </Button>
+        {bizInlineEditing && !bizInlineEditing.isEdit && (
+          <Space size={4} style={{ marginLeft: 12 }}>
+            <Input size="small" value={bizInlineEditing.name}
+              onChange={e => setBizInlineEditing(prev => prev ? { ...prev, name: e.target.value } : null)}
+              placeholder="请输入角色名称" style={{ width: 180 }} maxLength={10} onPressEnter={handleBizInlineConfirm} />
+            <Button type="text" size="small" icon={<CheckOutlined style={{ color: '#52c41a' }} />} onClick={handleBizInlineConfirm} />
+            <Button type="text" size="small" icon={<CloseOutlined style={{ color: '#ff4d4f' }} />} onClick={() => setBizInlineEditing(null)} />
+          </Space>
+        )}
       </div>
-      <Row gutter={[16, 16]}>
-        {rolesData.map((role) => (
-          <Col xs={24} sm={12} lg={6} key={role.id}>
-            <Card
-              title={
-                <Tag color={roleColors[role.type] || 'default'} style={{ fontSize: 14, padding: '2px 12px' }}>
-                  {role.name}
-                </Tag>
-              }
-              size="small"
-              style={{ height: '100%' }}
-            >
-              <p style={{ color: '#666', fontSize: 13, minHeight: 40 }}>
-                {t(roleDescs[role.type] || '')}
-              </p>
-              <div>
-                <strong>Permissions:</strong>
-                <ul style={{ paddingLeft: 16, marginTop: 8, fontSize: 12, color: '#555' }}>
-                  {role.permissions.map((perm, idx) => (
-                    <li key={idx}>{perm}</li>
-                  ))}
-                </ul>
+      <div style={{ display: 'flex', gap: 16 }}>
+        {/* Left: Role List */}
+        <Card size="small" style={{ width: 240, minHeight: 400 }}>
+          <Tree treeData={bizRoleTreeData} defaultExpandAll selectedKeys={selectedBizRoleId ? [selectedBizRoleId] : []} onSelect={handleSelectBizRole} blockNode />
+        </Card>
+        {/* Right: Permission Config */}
+        <Card size="small" style={{ flex: 1, minHeight: 400 }}>
+          {selectedBizRole ? (
+            <>
+              <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
+                <Button type={bizRoleActiveTab === 'function' ? 'primary' : 'default'} size="small" onClick={() => setBizRoleActiveTab('function')}>功能权限</Button>
+                <Button type={bizRoleActiveTab === 'data' ? 'primary' : 'default'} size="small" onClick={() => setBizRoleActiveTab('data')}>数据权限</Button>
               </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
+              {bizRoleActiveTab === 'function' ? (
+                selectedBizRole.type === 'admin' ? (
+                  <div style={{ padding: '16px 0', color: '#999' }}>
+                    <Typography.Text type="secondary">管理员角色权限不可修改，默认为全部权限。</Typography.Text>
+                    <div style={{ marginTop: 12 }}>
+                      <Tree checkable defaultExpandAll treeData={bizPermTreeData} checkedKeys={selectedBizRole.permissions} disabled />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 400, overflow: 'auto', marginBottom: 16 }}>
+                    <Tree checkable defaultExpandAll treeData={bizPermTreeData} checkedKeys={bizEditingPerms}
+                      onCheck={(keys) => { if (Array.isArray(keys)) setBizEditingPerms(keys as string[]); else setBizEditingPerms(keys.checked as string[]); }} />
+                  </div>
+                )
+              ) : (
+                <div style={{ padding: '16px 0' }}>
+                  {selectedBizRole.type === 'admin' ? (
+                    <Typography.Text type="secondary">管理员角色数据权限默认为“全部下级租户”，不可修改。</Typography.Text>
+                  ) : (
+                    <Radio.Group value={bizEditingDataScope} onChange={e => setBizEditingDataScope(e.target.value)}>
+                      <Space direction="vertical">
+                        <Radio value="仅本级">仅本级</Radio>
+                        <Radio value="本级+下级">本级+下级</Radio>
+                        <Radio value="全部下级">全部下级</Radio>
+                        <Radio value="全部下级租户">全部下级租户</Radio>
+                      </Space>
+                    </Radio.Group>
+                  )}
+                </div>
+              )}
+              {selectedBizRole.type !== 'admin' && (
+                <div style={{ marginTop: 16, borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+                  <Space>
+                    <Button type="primary" onClick={handleBizRoleSavePerms}>保存</Button>
+                    <Button onClick={handleBizRoleCancelPerms}>取消</Button>
+                  </Space>
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>
+              <Typography.Text type="secondary">请从左侧选择一个角色</Typography.Text>
+            </div>
+          )}
+        </Card>
+      </div>
       <Modal
         title={t('biz.new_role')}
         open={roleModalOpen}
-        onCancel={() => {
-          setRoleModalOpen(false);
-          roleForm.resetFields();
-        }}
-        onOk={() => {
-          roleForm.validateFields().then(() => {
-            message.success(t('toast.created'));
-            setRoleModalOpen(false);
-            roleForm.resetFields();
-          });
-        }}
+        onCancel={() => { setRoleModalOpen(false); roleForm.resetFields(); }}
+        onOk={() => { roleForm.validateFields().then(() => { message.success(t('toast.created')); setRoleModalOpen(false); roleForm.resetFields(); }); }}
         okText={t('common.save')}
         cancelText={t('common.cancel')}
       >
         <Form form={roleForm} layout="vertical">
-          <Form.Item
-            name="roleName"
-            label={t('tenant.role')}
-            rules={[{ required: true, message: t('tenant.role') }]}
-          >
+          <Form.Item name="roleName" label={t('tenant.role')} rules={[{ required: true, message: t('tenant.role') }]}>
             <Input />
           </Form.Item>
           <Form.Item label={t('biz.function_permissions')}>
-            <Checkbox.Group
-              options={functionPermissions.map((p) => ({ label: t(permI18nMap[p] || p), value: p }))}
-            />
+            <Checkbox.Group options={functionPermissions.map((p) => ({ label: t(permI18nMap[p] || p), value: p }))} />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+      </Col>
+    </Row>
   );
 
   // ============ Main render ============
@@ -648,19 +956,6 @@ const Biz: React.FC = () => {
       </div>
 
       <Card>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            {tabItems.map((tab) => (
-              <Button
-                key={tab.key}
-                type={bz === tab.key ? 'primary' : 'default'}
-                onClick={() => setBz(tab.key)}
-              >
-                {tab.label}
-              </Button>
-            ))}
-          </Space>
-        </div>
         <div>
           {tabItems.find((t) => t.key === bz)?.children}
         </div>

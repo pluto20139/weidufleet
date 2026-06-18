@@ -16,6 +16,8 @@ import {
   DatePicker,
 } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import { getRepairItems, addRepairItem, completeRepairItem, getVehicles, revertFaultAlertStatus, revertBatteryAlertStatus } from '@/api/mock';
 import type { RepairItem } from '@/types';
 import { maskVin, maskPlate, matchPlateSearch } from '@/utils/masking';
@@ -33,9 +35,8 @@ const Repair: React.FC = () => {
   const [plateFilter, setPlateFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState<RepairItem | null>(null);
   const [form] = Form.useForm();
   const watchedType = Form.useWatch('type', form);
 
@@ -51,6 +52,14 @@ const Repair: React.FC = () => {
     }
     if (statusFilter && statusFilter !== 'all') {
       filtered = filtered.filter((r) => r.status === statusFilter);
+    }
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const start = dateRange[0];
+      const end = dateRange[1];
+      filtered = filtered.filter((r) => {
+        const d = dayjs(r.startDate);
+        return d.isAfter(start.startOf('day').subtract(1, 'ms')) && d.isBefore(end.endOf('day').add(1, 'ms'));
+      });
     }
     setRepairs(filtered);
   };
@@ -72,8 +81,10 @@ const Repair: React.FC = () => {
   };
 
   const handleComplete = (id: string) => {
+    completeRepairItem(id);
+    const now = new Date().toISOString().slice(0, 10);
     setRepairs((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: '维修完成' as const } : r)),
+      prev.map((r) => (r.id === id ? { ...r, status: '维修完成' as const, endTime: now } : r)),
     );
     message.success(t('toast.completed'));
   };
@@ -90,11 +101,6 @@ const Repair: React.FC = () => {
     }
     setRepairs((prev) => prev.filter((r) => r.id !== id));
     message.success(t('toast.deleted'));
-  };
-
-  const handleViewDetail = (record: RepairItem) => {
-    setDetailItem(record);
-    setDetailModalOpen(true);
   };
 
   const columns = [
@@ -129,9 +135,6 @@ const Repair: React.FC = () => {
       key: 'action',
       render: (_: unknown, record: RepairItem) => (
         <Space>
-          <Button type="link" size="small" onClick={() => handleViewDetail(record)}>
-            {t('repair.action.view_detail', '查看详情')}
-          </Button>
           {record.status === '维修中' && (
             <>
               <Button type="link" size="small" onClick={() => handleComplete(record.id)}>
@@ -163,6 +166,7 @@ const Repair: React.FC = () => {
             value={plateFilter}
             onChange={(e) => setPlateFilter(e.target.value)}
             style={{ width: 160 }}
+            maxLength={8}
           />
           <Select
             placeholder={t('repair.type')}
@@ -187,7 +191,7 @@ const Repair: React.FC = () => {
               { value: '维修完成', label: '维修完成' },
             ]}
           />
-          <DatePicker.RangePicker format="YYYY-MM-DD" />
+          <DatePicker.RangePicker format="YYYY-MM-DD" onChange={(dates) => setDateRange(dates as [Dayjs | null, Dayjs | null] | null)} />
           <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
             {t('common.search')}
           </Button>
@@ -258,63 +262,14 @@ const Repair: React.FC = () => {
             label={t('repair.desc')}
             rules={[{ required: true, message: t('repair.desc') }]}
           >
-            <Select
-              placeholder={t('repair.desc')}
-              options={(() => {
-                const typeVal = watchedType;
-                const faultOpts = [
-                  { value: 'VDC', label: 'VDC故障报警' },
-                  { value: 'CDCU', label: 'CDCU故障报警' },
-                  { value: 'BDCU', label: 'BDCU故障报警' },
-                  { value: 'ADAS', label: 'ADAS故障报警' },
-                  { value: 'DC-DC温度', label: 'DC-DC温度报警' },
-                  { value: 'DC-DC状态', label: 'DC-DC状态报警' },
-                  { value: '驱动电机控制器温度', label: '驱动电机控制器温度报警' },
-                  { value: '驱动电机温度', label: '驱动电机温度报警' },
-                  { value: '高压互锁状态', label: '高压互锁状态报警' },
-                ];
-                const battOpts = [
-                  { value: 'SOC过低', label: 'SOC低报警' },
-                  { value: '电池高温', label: '电池高温报警' },
-                  { value: 'SOC跳变', label: 'SOC跳变报警' },
-                  { value: '充电故障', label: '充电故障报警' },
-                  { value: '温差报警', label: '温度差异报警' },
-                  { value: '储能过压', label: '车载储能装置过压报警' },
-                  { value: '储能欠压', label: '车载储能装置欠压报警' },
-                  { value: '单体过压', label: '单体电池过压报警' },
-                  { value: '单体欠压', label: '单体电池欠压报警' },
-                  { value: 'SOC过高', label: 'SOC过高报警' },
-                  { value: '储能不匹配', label: '可充电储能系统不匹配报警' },
-                  { value: '单体一致性差', label: '电池单体一致性差报警' },
-                  { value: '绝缘报警', label: '绝缘报警' },
-                  { value: '储能过充', label: '车载储能装置过充报警' },
-                ];
-                return typeVal === '电池类' ? battOpts : faultOpts;
-              })()}
+            <Input.TextArea
+              rows={3}
+              placeholder={watchedType === '电池类' ? '请输入电池类报警描述，如SOC过低、电池高温等' : '请输入故障类报警描述，如VDC故障、CDCU故障等'}
             />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Detail Modal */}
-      <Modal
-        title={t('repair.action.view_detail', '查看详情')}
-        open={detailModalOpen}
-        onCancel={() => setDetailModalOpen(false)}
-        footer={<Button onClick={() => setDetailModalOpen(false)}>{t('common.close')}</Button>}
-      >
-        {detailItem && (
-          <div>
-            <p><strong>{t('veh.plate')}:</strong> {maskPlate(detailItem.plate)}</p>
-            <p><strong>VIN:</strong> {maskVin(detailItem.vin)}</p>
-            <p><strong>{t('repair.type')}:</strong> {detailItem.type}</p>
-            <p><strong>{t('repair.repair_desc')}:</strong> {detailItem.description}</p>
-            <p><strong>{t('repair.date')}:</strong> {detailItem.startDate}</p>
-            <p><strong>{t('repair.recorder', '操作人')}:</strong> {detailItem.recorder || '—'}</p>
-            <p><strong>{t('repair.status_name', '维修状态')}:</strong> {detailItem.status}</p>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

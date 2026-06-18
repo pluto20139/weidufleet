@@ -82,7 +82,12 @@ const ExportRecordComponent: React.FC<ExportRecordProps> = ({ data }) => {
       rowKey="id"
       columns={columns}
       dataSource={data}
-      pagination={false}
+      pagination={{
+        defaultPageSize: 10,
+        pageSizeOptions: ['10', '20', '50', '100'],
+        showSizeChanger: true,
+        showTotal: (total) => `${total} ${t('common.records')}`,
+      }}
     />
   );
 };

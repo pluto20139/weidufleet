@@ -32,7 +32,7 @@ const allTenants: TenantItem[] = Array.from({ length: 24 }).map((_, i) => ({
 
 const Tenant: React.FC = () => {
   const { t } = useTranslation();
-  const [tenants, setTenants] = useState<TenantItem[]>(allTenants);
+  const [tenants, setTenants] = useState<TenantItem[]>([...allTenants].sort((a, b) => b.createdDate.localeCompare(a.createdDate)));
   const [nameFilter, setNameFilter] = useState('');
   const [codeFilter, setCodeFilter] = useState('');
   const [adminAccountFilter, setAdminAccountFilter] = useState('');
@@ -57,12 +57,12 @@ const Tenant: React.FC = () => {
     }
     if (codeFilter) {
       filtered = filtered.filter((t) =>
-        t.code.toLowerCase().includes(codeFilter.toLowerCase()),
+        t.code === codeFilter,
       );
     }
     if (adminAccountFilter) {
       filtered = filtered.filter((t) =>
-        t.adminAccount?.toLowerCase().includes(adminAccountFilter.toLowerCase()),
+        t.adminAccount === adminAccountFilter,
       );
     }
     if (createTimeRange && createTimeRange[0] && createTimeRange[1]) {
@@ -73,7 +73,15 @@ const Tenant: React.FC = () => {
         return d.isAfter(start.startOf('day')) && d.isBefore(end.endOf('day'));
       });
     }
-    setTenants(filtered);
+    setTenants([...filtered].sort((a, b) => b.createdDate.localeCompare(a.createdDate)));
+  };
+
+  const handleReset = () => {
+    setNameFilter('');
+    setCodeFilter('');
+    setAdminAccountFilter('');
+    setCreateTimeRange(null);
+    setTenants([...allTenants].sort((a, b) => b.createdDate.localeCompare(a.createdDate)));
   };
 
   const handleCreateTenant = () => {
@@ -113,7 +121,8 @@ const Tenant: React.FC = () => {
           okText: '追加角色',
           cancelText: '取消',
           onOk: () => {
-            const pwd = Math.random().toString(36).slice(2, 10) + 'A1!';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const pwd = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
             setCreatedAccount({ email: values.email, password: '（已有账号，已追加角色）' });
             setSetupModalOpen(false);
             setupForm.resetFields();
@@ -122,8 +131,9 @@ const Tenant: React.FC = () => {
         });
         return;
       }
-      const pwd = Math.random().toString(36).slice(2, 10) + 'A1!';
-      setCreatedAccount({ email: values.email, password: pwd });
+      const chars2 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const pwd2 = Array.from({ length: 8 }, () => chars2[Math.floor(Math.random() * chars2.length)]).join('');
+      setCreatedAccount({ email: values.email, password: pwd2 });
       setSetupModalOpen(false);
       setupForm.resetFields();
       setConfirmModalOpen(true);
@@ -186,23 +196,27 @@ const Tenant: React.FC = () => {
       render: (_: unknown, record: TenantItem) => (
         <Space>
           <Button type="link" onClick={() => handleOpenEdit(record)}>{t('tenant.action.edit')}</Button>
-          <Button
-            type="link"
-            onClick={() => {
-              setSelectedTenant(record);
-              setSetupModalOpen(true);
-            }}
-          >
-            {t('tenant.action.setup_admin')}
-          </Button>
           {record.adminAccount && record.adminAccount !== '—' ? (
-            <Tooltip title="该租户已开通管理员账号，不可删除">
-              <Button type="link" danger disabled>{t('tenant.action.del')}</Button>
-            </Tooltip>
+            <>
+              <Tooltip title="该租户已开通管理员账号，不可删除">
+                <Button type="link" danger disabled>{t('tenant.action.del')}</Button>
+              </Tooltip>
+            </>
           ) : (
-            <Button type="link" danger onClick={() => handleDelete(record.id)}>
-              {t('tenant.action.del')}
-            </Button>
+            <>
+              <Button
+                type="link"
+                onClick={() => {
+                  setSelectedTenant(record);
+                  setSetupModalOpen(true);
+                }}
+              >
+                {t('tenant.action.setup_admin')}
+              </Button>
+              <Button type="link" danger onClick={() => handleDelete(record.id)}>
+                {t('tenant.action.del')}
+              </Button>
+            </>
           )}
         </Space>
       ),
@@ -243,6 +257,9 @@ const Tenant: React.FC = () => {
           />
           <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
             {t('common.search')}
+          </Button>
+          <Button onClick={handleReset}>
+            {t('common.reset')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setNewModalOpen(true)}>
             {t('tenant.action.new')}
