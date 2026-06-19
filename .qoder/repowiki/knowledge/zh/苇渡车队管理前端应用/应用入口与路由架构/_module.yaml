@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: weidu_fleet/app_shell
+title: 应用入口与路由架构
+scope:
+    - weidu-fleet/src/App.tsx
+    - weidu-fleet/src/main.tsx
+    - weidu-fleet/src/vite-env.d.ts
+source_files: []
+depends_on: []
+related_to:
+    - path: weidu_fleet/admin_features

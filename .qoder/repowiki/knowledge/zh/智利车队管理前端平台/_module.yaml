@@ -1,0 +1,19 @@
+schema_version: 1
+module_path: ""
+title: 智利车队管理前端平台
+scope:
+    - .gitignore
+    - CLAUDE.md
+    - Review_05-测试计划.md
+    - 智利车队管理-详细设计.html
+    - 智利车队管理平台-测试用例.md
+    - 智利车队管理平台_CodeReview报告_03.md
+    - 智利车队管理平台_React重构版_Review报告_04.md
+    - 苇渡-智利车队管理平台-Review_05报告.md
+    - 智利车队管理平台-测试计划.md
+    - 智利车队管理平台_CodeReview报告_01.md
+    - 智利车队管理平台_React重构版_Review报告_02.md
+    - 苇渡-智利车队管理PRD .md
+source_files: []
+depends_on: []
+related_to: []

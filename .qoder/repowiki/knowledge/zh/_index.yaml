@@ -1,0 +1,106 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+exported_at: "2026-06-09T05:53:19Z"
+modules:
+    "":
+        dir_name: 智利车队管理前端平台
+        title: 智利车队管理前端平台
+        scope:
+            - .gitignore
+            - CLAUDE.md
+            - Review_05-测试计划.md
+            - 智利车队管理-详细设计.html
+            - 智利车队管理平台-测试用例.md
+            - 智利车队管理平台_CodeReview报告_03.md
+            - 智利车队管理平台_React重构版_Review报告_04.md
+            - 苇渡-智利车队管理平台-Review_05报告.md
+            - 智利车队管理平台-测试计划.md
+            - 智利车队管理平台_CodeReview报告_01.md
+            - 智利车队管理平台_React重构版_Review报告_02.md
+            - 苇渡-智利车队管理PRD .md
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    weidu_fleet:
+        dir_name: 苇渡车队管理前端应用
+        title: 苇渡车队管理前端应用
+        scope:
+            - weidu-fleet/
+        source_files: []
+        children:
+            - weidu_fleet/vehicles_domain
+            - weidu_fleet/core_infra
+            - weidu_fleet/app_shell
+            - weidu_fleet/admin_features
+            - weidu_fleet/monitoring_features
+        depends_on: []
+        related_to: []
+    weidu_fleet/admin_features:
+        dir_name: 多租户管理与系统管理
+        title: 多租户管理与系统管理
+        scope:
+            - weidu-fleet/src/pages/Login.tsx
+            - weidu-fleet/src/pages/Biz.tsx
+            - weidu-fleet/src/pages/Sys.tsx
+            - weidu-fleet/src/pages/Tenant.tsx
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: weidu_fleet/app_shell
+    weidu_fleet/app_shell:
+        dir_name: 应用入口与路由架构
+        title: 应用入口与路由架构
+        scope:
+            - weidu-fleet/src/App.tsx
+            - weidu-fleet/src/main.tsx
+            - weidu-fleet/src/vite-env.d.ts
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: weidu_fleet/admin_features
+    weidu_fleet/core_infra:
+        dir_name: 核心基础设施与布局模块
+        title: 核心基础设施与布局模块
+        scope:
+            - weidu-fleet/src/api/
+            - weidu-fleet/src/i18n/
+            - weidu-fleet/src/store/
+            - weidu-fleet/src/types/
+            - weidu-fleet/src/utils/
+            - weidu-fleet/src/components/Layout/
+            - weidu-fleet/src/styles/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    weidu_fleet/monitoring_features:
+        dir_name: 车队监控与运营可视化
+        title: 车队监控与运营可视化
+        scope:
+            - weidu-fleet/src/pages/Dashboard.tsx
+            - weidu-fleet/src/pages/Monitor.tsx
+            - weidu-fleet/src/pages/Battery.tsx
+            - weidu-fleet/src/pages/Driving.tsx
+            - weidu-fleet/src/pages/Trips.tsx
+            - weidu-fleet/src/pages/Fence.tsx
+            - weidu-fleet/src/pages/Repair.tsx
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: weidu_fleet/vehicles_domain
+    weidu_fleet/vehicles_domain:
+        dir_name: 车辆详情数据可视化组件
+        title: 车辆详情数据可视化组件
+        scope:
+            - weidu-fleet/src/pages/Vehicles/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: weidu_fleet/monitoring_features

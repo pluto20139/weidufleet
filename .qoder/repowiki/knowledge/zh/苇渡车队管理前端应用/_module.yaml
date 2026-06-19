@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: weidu_fleet
+title: 苇渡车队管理前端应用
+scope:
+    - weidu-fleet/
+source_files: []
+depends_on: []
+related_to: []

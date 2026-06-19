@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智利车队管理平台 — 详细设计文档</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #1a1a2e;
+    --text-body: #333;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --green: #059669;
+    --yellow: #d97706;
+    --red: #dc2626;
+    --tag-bg: #f3f4f6;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-body);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* Header */
+  .doc-header { margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .doc-header h1 { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .doc-header .meta { display: flex; gap: 16px; margin-top: 6px; font-size: 11px; color: var(--text-muted); }
+  .doc-header .meta span { display: flex; align-items: center; gap: 4px; }
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 28px; }
+  .toc h2 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .toc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; }
+  .toc-list a { color: var(--accent); text-decoration: none; font-size: 12px; padding: 2px 0; display: block; }
+  .toc-list a:hover { text-decoration: underline; }
+  .toc-list .toc-sub { padding-left: 16px; font-size: 11px; color: var(--text-muted); }
+
+  /* Module Section */
+  .module { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .module-header { padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none; }
+  .module-header:hover { background: var(--accent-light); }
+  .module-header .num { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-light); border-radius: 4px; padding: 1px 7px; }
+  .module-header h2 { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+  .module-header .arrow { font-size: 12px; color: var(--text-muted); transition: transform .2s; }
+  .module.open .module-header .arrow { transform: rotate(180deg); }
+  .module-body { padding: 0 20px 20px; display: none; }
+  .module.open .module-body { display: block; }
+
+  /* Content blocks */
+  .section { margin-top: 16px; }
+  .section-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .section-title::before { content: ''; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+  .desc { font-size: 12px; color: var(--text-body); line-height: 1.7; }
+  .desc p + p { margin-top: 6px; }
+
+  /* Grid layout for cards */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin: 8px 0; }
+  .info-card { background: var(--bg); border-radius: 4px; padding: 8px 10px; }
+  .info-card .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .info-card .value { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 1px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 8px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  table thead th { background: var(--bg); color: var(--text-muted); font-weight: 600; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+  table tbody td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  table tbody tr:nth-child(even) td { background: #f9fafb; }
+  table tbody tr:hover td { background: var(--accent-light); }
+
+  /* Tags */
+  .tag { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+  .tag-gray { background: var(--tag-bg); color: var(--text-muted); }
+  .tag-blue { background: #dbeafe; color: #1d4ed8; }
+  .tag-green { background: #d1fae5; color: #065f46; }
+  .tag-yellow { background: #fef3c7; color: #92400e; }
+  .tag-red { background: #fee2e2; color: #991b1b; }
+
+  /* Badge list */
+  .enum-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+  .enum-item { font-size: 10px; background: var(--tag-bg); padding: 2px 8px; border-radius: 3px; color: var(--text-body); }
+
+  /* Code / API */
+  .api-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin: 6px 0; font-size: 11px; }
+  .api-box .method { display: inline-block; font-weight: 600; padding: 1px 6px; border-radius: 3px; font-size: 10px; margin-right: 6px; }
+  .method-get { background: #dbeafe; color: #1d4ed8; }
+  .method-post { background: #d1fae5; color: #065f46; }
+  .method-put { background: #fef3c7; color: #92400e; }
+  .method-delete { background: #fee2e2; color: #991b1b; }
+
+  /* Test card */
+  .test-list { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .test-list li { font-size: 11px; padding: 6px 10px; background: var(--bg); border-radius: 4px; border-left: 3px solid var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 16px 10px 48px; }
+    .toc-list { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .test-list { grid-template-columns: 1fr; }
+    table { font-size: 10px; }
+  }
+
+  /* Print */
+  @media print {
+    .module-body { display: block !important; }
+    .module-header .arrow { display: none; }
+    body { font-size: 11px; }
+    .container { max-width: 100%; padding: 0; }
+    .module { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="doc-header">
+  <h1>智利车队管理平台 · 详细设计文档</h1>
+  <div class="meta">
+    <span>版本: v1.0</span>
+    <span>更新: 2026-06-04</span>
+    <span>模块数: 13</span>
+    <span>状态: 初稿</span>
+  </div>
+</div>
+
+<div class="toc">
+  <h2>目录</h2>
+  <div class="toc-list">
+    <a href="#m1">01 登录及基础能力</a>
+    <a href="#m2">02 首页看板</a>
+    <a href="#m3">03 业务管理</a>
+    <a class="toc-sub" href="#m3">租户权限 · 租户信息 · 资产划拨 · 用户管理 · 角色管理</a>
+    <a href="#m4">04 租户管理</a>
+    <a href="#m5">05 车辆管理</a>
+    <a class="toc-sub" href="#m5">车辆列表 · 批量导入 · 车辆详情 · 台账Tabs</a>
+    <a href="#m6">06 围栏管理</a>
+    <a href="#m7">07 风控预警</a>
+    <a class="toc-sub" href="#m7">围栏报警 · 故障报警 · 电池报警</a>
+    <a href="#m8">08 驾驶行为</a>
+    <a class="toc-sub" href="#m8">驾驶预警 · 驾驶报告 · 评分规则</a>
+    <a href="#m9">09 电池管理</a>
+    <a class="toc-sub" href="#m9">电池监控 · 充放电记录</a>
+    <a href="#m10">10 行程管理</a>
+    <a href="#m11">11 维修管理</a>
+    <a href="#m12">12 实时监控</a>
+    <a class="toc-sub" href="#m12">实时位置 · 轨迹回放</a>
+    <a href="#m13">13 系统管理</a>
+  </div>
+</div>
+
+<!-- ========== M1 登录及基础能力 ========== -->
+<div class="module open" id="m1">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">01</span>
+    <h2>登录及基础能力</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc">
+      <p>对接用户中心，提供平台登录认证、密码管理、多语言切换及租户切换等基础能力。所有功能均复用基线能力，但需适配智利车队的用户体系与租户关系。</p>
+    </div></div>
+
+    <div class="section"><div class="section-title">功能结构</div>
+    <table>
+      <thead><tr><th>功能</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>项目应用登录</td><td><span class="tag tag-gray">基线</span></td><td>调用公共登录接口，支持账号+密码+验证码</td></tr>
+        <tr><td>修改密码</td><td><span class="tag tag-gray">基线</span></td><td>首次登录强制修改；用户主动修改。密码规则：8~18位，数字+英文+特殊字符</td></tr>
+        <tr><td>语言切换</td><td><span class="tag tag-gray">基线</span></td><td>汉语 / 英语 / 西班牙语（智利市场）</td></tr>
+        <tr><td>租户切换</td><td><span class="tag tag-gray">基线</span></td><td>根据用户关联的租户列表平铺展示，无层级</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">业务逻辑</div>
+    <table>
+      <thead><tr><th>场景</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>首次登录</td><td>用户未修改过密码 → 自动弹出修改密码弹窗 → 修改后方可进入首页</td></tr>
+        <tr><td>租户切换</td><td>仅关联1个租户 → 隐藏切换按钮。关联多个 → 展示按钮，点击展示租户列表；记录最近一次选择的租户，下次登录默认选中</td></tr>
+        <tr><td>语言切换</td><td>默认跟随系统/浏览器语言<br>支持汉语、英语、西班牙语<br>切换后全局生效，持久化到用户配置</td></tr>
+        <tr><td>服务到期</td><td>租户关联的一级租户服务到期 → 该一、二、三级租户均显示"服务过期"</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">异常提示</div>
+    <table>
+      <thead><tr><th>场景</th><th>提示文案</th></tr></thead>
+      <tbody>
+        <tr><td>账号密码不匹配 / 账号不存在</td><td>"账号密码错误"</td></tr>
+        <tr><td>验证码不正确</td><td>"验证码错误"</td></tr>
+        <tr><td>当前密码错误（修改密码）</td><td>"当前密码错误"</td></tr>
+        <tr><td>新密码格式不符</td><td>"请输入8~18位字符，支持数字、英文、特殊字符"</td></tr>
+        <tr><td>新密码与当前密码一致</td><td>"新密码不能与当前密码相同"</td></tr>
+        <tr><td>确认新密码不一致</td><td>"新密码不一致"</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/auth/login — 用户登录</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/auth/password — 修改密码</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/user/tenants — 获取用户关联租户列表</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/user/switch-tenant — 切换当前租户</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/user/language — 获取语言偏好</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/user/language — 设置语言偏好</div>
+    </div>
+
+    <div class="section"><div class="section-title">UI 组件拆解</div>
+    <table>
+      <thead><tr><th>组件</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>登录页</td><td>账号输入 + 密码输入 + 验证码 + 登录按钮</td></tr>
+        <tr><td>修改密码弹窗</td><td>当前密码 / 新密码 / 确认新密码 + 确定/取消</td></tr>
+        <tr><td>语言切换下拉</td><td>右上角用户昵称下拉菜单，三个语言选项</td></tr>
+        <tr><td>租户切换面板</td><td>点击头像/昵称后展示租户列表，支持"服务过期"标记</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>首次登录强制修改密码流程</li>
+      <li>租户切换后菜单权限刷新</li>
+      <li>三种语言切换后文案完整</li>
+      <li>密码规则校验（8~18位含特殊字符）</li>
+      <li>服务到期租户标记与进入限制</li>
+      <li>登录失败3次后验证码机制</li>
+    </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========== M2 首页看板 ========== -->
+<div class="module" id="m2">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">02</span>
+    <h2>首页看板</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>展示车队运营核心指标的仪表盘，包括车辆状态统计、驾驶风险分布图表、车辆实时位置地图和今日预警排行榜。帮助管理者快速掌握车队整体运营状况。</p></div></div>
+
+    <div class="section"><div class="section-title">功能结构</div>
+    <table>
+      <thead><tr><th>区域</th><th>内容</th><th>数据来源</th></tr></thead>
+      <tbody>
+        <tr><td>数据指标</td><td>车辆总数 / 在线数 / 离线数 / 今日里程 / 累计总里程 / 今日驾驶预警 / 今日围栏预警 / 今日低电报警</td><td>OBD + 车身</td></tr>
+        <tr><td>数据图表</td><td>驾驶风险分布柱状图（急加速/急减速/急转弯/疲劳驾驶/AEB），支持今日/近7日/近30日切换</td><td>OBD</td></tr>
+        <tr><td>实时位置地图</td><td>以车队运营城市为中心的地图，展示所有车辆实时位置、车辆信息、电池信息、速度</td><td>OBD</td></tr>
+        <tr><td>今日预警排行榜</td><td>按车辆展示今日驾驶预警/围栏预警/故障预警/低电报警次数，按总计降序</td><td>OBD + 车身</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">数据模型</div>
+    <table>
+      <thead><tr><th>字段</th><th>类型</th><th>计算规则</th></tr></thead>
+      <tbody>
+        <tr><td>车辆总数</td><td>int</td><td>当前租户及下级租户名下所有车辆总数</td></tr>
+        <tr><td>在线/离线数</td><td>int</td><td>依据OBD设备在线/离线状态统计</td></tr>
+        <tr><td>今日里程</td><td>float(km)</td><td>所有车辆今日行驶里程总和</td></tr>
+        <tr><td>驾驶风险分布</td><td>ratio</td><td>每类风险事件数量 / 总事件数 × 100%</td></tr>
+        <tr><td>预警排行榜</td><td>list</td><td>按总计降序，展示车牌+4类预警次数+总计</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/dashboard/overview — 获取看板概览数据（指标+排行榜）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/dashboard/driving-risk?range=today|7d|30d — 驾驶风险分布</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/dashboard/real-time-map — 实时位置地图数据</div>
+    </div>
+
+    <div class="section"><div class="section-title">UI 组件拆解</div>
+    <table>
+      <thead><tr><th>组件</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>统计指标卡</td><td>8个指标卡片，2×4 或 4×2 网格布局</td></tr>
+        <tr><td>柱状图</td><td>ECharts/Chart.js，支持时间范围切换（今日/近7日/近30日）</td></tr>
+        <tr><td>实时位置地图</td><td>Mapbox/高德地图，车辆图标打点，聚合展示，支持缩放/拖拽</td></tr>
+        <tr><td>预警排行榜</td><td>列表组件，带排名序号和颜色标记</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>指标数据与后端统计一致</li>
+      <li>图表时间范围切换刷新数据</li>
+      <li>地图车辆位置定时刷新</li>
+      <li>排行榜排序正确性</li>
+      <li>空数据状态展示</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M3 业务管理 ========== -->
+<div class="module" id="m3">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">03</span>
+    <h2>业务管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>面向应用管理员（根级租户）的多层级租户管理体系，涵盖租户层级定义、功能权限配置、资产划拨、用户与角色管理。</p></div></div>
+
+    <!-- 3.1 租户权限 -->
+    <div class="section"><div class="section-title">3.1 租户权限</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>租户层级管理</td><td>根级（苇渡汽车）→ 一级租户 → 二级及以下（同层级共享权限模板）</td></tr>
+        <tr><td>层级增删改查</td><td>根级初始化，不可编辑。一级从租户管理同步，不可编辑/删除。二级支持编辑名称、删除（无下级时）、新增下级。每级仅可添加一个直接下级</td></tr>
+        <tr><td>功能权限配置</td><td>根级：不可配置（产品定义）。一级：按租户维配置全部功能权限。二级及以下：按层级模板批量配置</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 3.2 租户信息 -->
+    <div class="section"><div class="section-title">3.2 租户信息</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>租户树</td><td>按树级结构展示全部租户，支持名称模糊搜索</td></tr>
+        <tr><td>租户详情</td><td>点击任意非根级租户节点，展示基础信息 + 管理员账号信息</td></tr>
+        <tr><td>权限范围</td><td>仅应用管理员（根级租户管理员）可访问此页面</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 3.3 资产划拨 -->
+    <div class="section"><div class="section-title">3.3 资产划拨</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>资产列表</td><td>展示应用下全部车辆资产（IOT平台按渠道标识同步落库），字段：VIN码、归属租户、同步时间、操作（划拨/记录/删除）</td></tr>
+        <tr><td>同步数据</td><td>首次全量同步，后续增量同步（以VIN为唯一标识）</td></tr>
+        <tr><td>资产划拨</td><td>单条或批量选择资产 → 选择目标租户 → 更新归属。已划拨的资产再次划拨时覆盖原租户</td></tr>
+        <tr><td>划拨记录</td><td>展示归属租户变更历史：划拨时间、变更人、划拨前/后租户</td></tr>
+        <tr><td>删除资产</td><td>已关联设备的资产不可删除；未关联的二次确认后删除</td></tr>
+        <tr><td>筛选</td><td>VIN码（精准）、归属租户（级联选择，含"未划拨"）、同步时间（日期区间）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 3.4 用户管理 -->
+    <div class="section"><div class="section-title">3.4 用户管理</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>用户列表</td><td>根据左侧选中租户查询该租户下用户列表。字段：序号/用户昵称/登录邮箱/角色/创建时间/操作</td></tr>
+        <tr><td>新增用户（两步）</td><td>Step1: 填写昵称、邮箱、角色。Step2: 检查用户中心是否存在该邮箱→不存在则创建用户+分配角色；存在则关联已有用户+追加角色</td></tr>
+        <tr><td>编辑用户</td><td>可编辑昵称、邮箱、角色（管理员角色置灰不可改）。邮箱唯一性校验</td></tr>
+        <tr><td>重置密码</td><td>二次确认后重置为8位随机密码（大写字母+数字），展示新密码并支持复制</td></tr>
+        <tr><td>删除用户</td><td>仅删除该用户在当前租户下的角色权限关系。管理员角色账号不可删除</td></tr>
+        <tr><td>筛选</td><td>用户昵称（模糊）、登录邮箱（模糊）、角色（多选）、创建时间（日期区间）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 3.5 角色管理 -->
+    <div class="section"><div class="section-title">3.5 角色管理</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>角色列表</td><td>根据左侧选中租户查询角色信息，按创建时间正序。管理员角色（系统自动创建）不可编辑/删除</td></tr>
+        <tr><td>新增角色</td><td>输入角色名称（该校验唯一性）→ 配置功能权限（可选范围=该租户层级可配置范围）→ 数据权限默认全部下级租户</td></tr>
+        <tr><td>删除角色</td><td>未关联用户：二次确认后删除。已关联用户：提示"删除后用户无相关权限"</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/tenant/tree — 租户树</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/tenant/permissions — 租户功能权限</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/tenant/permissions — 更新租户功能权限</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/assets — 资产列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/assets/sync — 同步资产数据</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/assets/allocate — 资产划拨</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/users — 创建用户</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/users — 用户列表</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/users/{id} — 编辑用户</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/users/{id} — 删除用户</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/users/{id}/reset-password — 重置密码</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/roles — 角色列表</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/roles — 创建角色</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/roles/{id} — 删除角色</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>租户层级增删改查 + 级联限制</li>
+      <li>资产划拨后归属租户更新 + 记录生成</li>
+      <li>两步创建用户（已存在/不存在邮箱分支）</li>
+      <li>管理员角色保护（不可删除/不可编辑）</li>
+      <li>数据权限隔离验证</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M4 租户管理 ========== -->
+<div class="module" id="m4">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">04</span>
+    <h2>租户管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>面向各层级租户管理员，管理下级租户的创建、编辑、开通管理员账号和删除。与业务管理中的租户信息不同，本模块是租户自管理视角。</p></div></div>
+
+    <div class="section"><div class="section-title">业务逻辑</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>新增租户</td><td>企业名称（必填，唯一校验）、企业编码（必填，唯一校验）、企业地址/联系人/联系电话（选填）→ 在当前登录租户下新增下级</td></tr>
+        <tr><td>编辑租户</td><td>企业编码不可修改。企业名称/地址/联系人/联系电话可修改</td></tr>
+        <tr><td>开通账号</td><td>两步流程：Step1 填写昵称+邮箱（角色固定为管理员置灰）→ Step2 创建或关联用户中心账号</td></tr>
+        <tr><td>删除租户</td><td>未开通管理员账号 → 可删除；已开通 → 不可删除</td></tr>
+        <tr><td>筛选</td><td>企业编码（精准）、企业名称（模糊）、管理员账号（精准）、创建时间（日期区间）</td></tr>
+        <tr><td>列表</td><td>企业编码 / 企业名称 / 企业地址 / 联系人 / 联系方式 / 管理员账号 / 创建时间</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/tenants — 租户列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/tenants — 新增下级租户</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/tenants/{id} — 编辑租户</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/tenants/{id} — 删除租户</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/tenants/{id}/setup-admin — 开通管理员账号</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>新增租户唯一性校验（企业编码+名称）</li>
+      <li>删除租户限制（已开通不可删）</li>
+      <li>两步开通账号流程（存在/不存在邮箱）</li>
+      <li>开通后同步管理员角色 + 管理员用户</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M5 车辆管理 ========== -->
+<div class="module" id="m5">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">05</span>
+    <h2>车辆管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>对当前租户及下级租户名下所有车辆的资产管理，包括车辆列表展示、批量导入更新、车辆详情查看（含7类台账记录）。</p></div></div>
+
+    <div class="section"><div class="section-title">数据模型 — 车辆列表</div>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>VIN码</td><td>车辆唯一标识，17位字母数字</td></tr>
+        <tr><td>车牌号</td><td>最多8字符</td></tr>
+        <tr><td>绑定设备ID</td><td>OBD设备ID</td></tr>
+        <tr><td>车型</td><td>车辆型号</td></tr>
+        <tr><td>外观</td><td>车辆颜色</td></tr>
+        <tr><td>电池版本</td><td>电池版本号</td></tr>
+        <tr><td>购车时间</td><td>YYYY-MM-DD</td></tr>
+        <tr><td>车龄</td><td>(当前日期-购车日期)/365，保留1位小数</td></tr>
+        <tr><td>总里程数</td><td>累计行驶里程(km)，取整</td></tr>
+        <tr><td>最后位置</td><td>逆地址解析，过长省略+气泡展示</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">批量导入校验逻辑</div>
+    <table>
+      <thead><tr><th>校验项</th><th>处理方式</th></tr></thead>
+      <tbody>
+        <tr><td>文件格式非 .xls/.xlsx/.csv</td><td>整个文件导入失败，提示"请上传正确的 Excel 文件格式"</td></tr>
+        <tr><td>文件 > 50MB</td><td>整个文件导入失败，提示"文件过大，请分批导入"</td></tr>
+        <tr><td>VIN码为空</td><td>跳过错误数据，正确数据导入成功，生成失败明细</td></tr>
+        <tr><td>VIN码非17位</td><td>跳过错误数据，正确数据导入成功，生成失败明细</td></tr>
+        <tr><td>VIN码重复（同一文件）</td><td>仅保留首行</td></tr>
+        <tr><td>VIN不在当前租户资产池</td><td>跳过，生成失败明细</td></tr>
+      </tbody>
+    </table>
+    <div class="desc" style="margin-top:6px"><p><strong>可覆盖字段：</strong>外观、车牌号 &nbsp;|&nbsp; <strong>不可覆盖：</strong>VIN码、购车时间、车型、类型、绑定设备号、车龄、总里程数、电池版本、最后位置</p></div>
+    </div>
+
+    <div class="section"><div class="section-title">车辆详情 — 台账 Tabs</div>
+    <table>
+      <thead><tr><th>Tab</th><th>核心字段</th><th>数据来源</th></tr></thead>
+      <tbody>
+        <tr><td>风控预警记录</td><td>VIN、车牌号、预警名称（23种枚举）、预警内容、预警时间</td><td>车身CAN信号</td></tr>
+        <tr><td>驾驶预警记录</td><td>VIN、车牌号、预警名称（6种ADAS枚举）、预警内容、预警时间</td><td>车身CAN信号</td></tr>
+        <tr><td>电池监控信息</td><td>VIN、车牌号、SOC值、电池健康度、电池温度、续航里程</td><td>车身CAN信号</td></tr>
+        <tr><td>充电记录</td><td>VIN、车牌号、电压、电流、功率、充电前/后电量、充电时长、累计充电次数</td><td>车身CAN信号</td></tr>
+        <tr><td>行程记录</td><td>VIN、车牌号、开始/结束时间、起点/终点、行驶里程、行程时长、平均车速、预警次数</td><td>OBD+车身</td></tr>
+        <tr><td>维修记录</td><td>VIN、车牌号、维修类型、维修描述、开始/结束时间、记录人、维修状态</td><td>手动创建/一键报修</td></tr>
+        <tr><td>里程报表</td><td>折线图展示（X轴时间/Y轴里程），支持日/周/月/年维度切换</td><td>里程数据聚合</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">UI 组件拆解</div>
+    <table>
+      <thead><tr><th>组件</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>车辆列表页</td><td>筛选区（VIN/车牌号/设备ID/电池版本/车龄）+ 表格 + 批量导入按钮 + 分页</td></tr>
+        <tr><td>批量导入弹窗</td><td>模板下载 + 文件上传 + 校验结果展示 + 失败明细下载</td></tr>
+        <tr><td>车辆详情布局</td><td>左侧：车辆信息+设备信息卡片；右侧：Tab栏+对应列表</td></tr>
+        <tr><td>里程报表Tab</td><td>维度切换（日/周/月/年）+ 折线图</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles — 车辆列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/vehicles/import — 批量导入车辆</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin} — 车辆详情</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/alerts — 风控预警记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/driving-alerts — 驾驶预警记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/battery — 电池监控信息</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/charging — 充电记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/trips — 行程记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/repairs — 维修记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/vehicles/{vin}/mileage-report — 里程报表</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>批量导入各校验分支覆盖</li>
+      <li>车辆详情各Tab数据正确</li>
+      <li>数据权限隔离（仅展示本级及下级租户车辆）</li>
+      <li>里程报表维度切换 + 图表渲染</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M6 围栏管理 ========== -->
+<div class="module" id="m6">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">06</span>
+    <h2>围栏管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>在租户维度管理电子围栏，支持创建中心点围栏和自定义围栏，配置使用车辆，控制围栏生效/失效。</p></div></div>
+
+    <div class="section"><div class="section-title">业务逻辑</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>围栏列表</td><td>字段：序号/围栏名称/类型（中心点/自定义）/使用车辆数/状态（生效中/未生效）/地址/操作人/操作时间</td></tr>
+        <tr><td>新建围栏</td><td>中心点：名称+地址+半径（≤100km）+预警类型（出栏/入栏）+地图选点。自定义：名称+地图标记点位（≤99个），点位需闭合</td></tr>
+        <tr><td>编辑围栏</td><td>同新建逻辑</td></tr>
+        <tr><td>开关</td><td>生效/未生效切换，关闭需二次确认</td></tr>
+        <tr><td>删除</td><td>仅围栏关闭（未生效）时可删除，需二次确认</td></tr>
+        <tr><td>车辆配置</td><td>点击"使用车辆"数字进入配置页，可添加/删除使用该围栏的车辆</td></tr>
+        <tr><td>筛选</td><td>围栏名称（模糊）、类型（下拉单选）、状态（下拉单选）、操作时间（区间）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/fences — 围栏列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/fences — 创建围栏</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/fences/{id} — 编辑围栏</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/fences/{id} — 删除围栏</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/fences/{id}/toggle — 开关围栏</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/fences/{id}/vehicles — 围栏关联车辆</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/fences/{id}/vehicles — 添加关联车辆</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/fences/{id}/vehicles/{vin} — 移除关联车辆</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>中心点围栏半径校验（≤100km）</li>
+      <li>自定义围栏点位闭合校验</li>
+      <li>围栏开关状态流转</li>
+      <li>删除限制（仅未生效可删）</li>
+      <li>地图选点/标记交互</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M7 风控预警 ========== -->
+<div class="module" id="m7">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">07</span>
+    <h2>风控预警</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>集中展示和管理车辆运营中产生的各类风险报警信息，包括围栏出入、故障报警、电池报警。支持一键生成维修工单，打通维修管理流程。</p></div></div>
+
+    <div class="section"><div class="section-title">功能结构</div>
+    <table>
+      <thead><tr><th>Tab</th><th>类型</th><th>数据来源</th><th>核心操作</th></tr></thead>
+      <tbody>
+        <tr><td>围栏报警</td><td><span class="tag tag-gray">基线复用</span></td><td>OBD设备</td><td>查看详情（含地图围栏范围）</td></tr>
+        <tr><td>故障报警</td><td><span class="tag tag-blue">定制</span></td><td>OBD设备</td><td>查看详情 + 一键报修</td></tr>
+        <tr><td>电池报警</td><td><span class="tag tag-blue">定制</span></td><td>OBD设备</td><td>查看详情 + 一键报修</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">围栏报警 — 字段</div>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>报警类型</td><td><span class="tag tag-gray">出栏报警</span> <span class="tag tag-gray">入栏报警</span></td></tr>
+        <tr><td>围栏名称</td><td>触发预警的围栏名称</td></tr>
+        <tr><td>报警位置</td><td>触发时车辆所在位置</td></tr>
+        <tr><td>详情地图</td><td>展示预警上报点位 + 围栏范围</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">故障报警 — 字段与逻辑</div>
+    <table>
+      <thead><tr><th>项目</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>报警类型枚举</td><td><span class="tag tag-gray">VDC故障</span> <span class="tag tag-gray">CDCU故障</span> <span class="tag tag-gray">BDCU故障</span> <span class="tag tag-gray">ADAS故障</span></td></tr>
+        <tr><td>报警内容</td><td>解析车辆信号得到的具体故障描述</td></tr>
+        <tr><td>报警状态</td><td><span class="tag tag-yellow">未处理</span> → <span class="tag tag-blue">已生成工单</span> → <span class="tag tag-green">已修复</span></td></tr>
+        <tr><td>一键报修</td><td>仅"未处理"状态展示按钮 → 自动带入车辆数据 → 状态变更为"已生成工单"</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">电池报警 — 字段与逻辑</div>
+    <table>
+      <thead><tr><th>项目</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>报警类型枚举</td><td><span class="tag tag-gray">SOC过低</span> <span class="tag tag-gray">电池高温</span> <span class="tag tag-gray">SOC跳变</span> <span class="tag tag-gray">充电故障</span> <span class="tag tag-gray">温差报警</span></td></tr>
+        <tr><td>报警内容</td><td>解析车辆信号得到的具体电池异常描述</td></tr>
+        <tr><td>报警状态</td><td><span class="tag tag-yellow">未处理</span> → <span class="tag tag-blue">已生成工单</span> → <span class="tag tag-green">已修复</span></td></tr>
+        <tr><td>一键报修</td><td>同故障报警逻辑</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/alerts/fence — 围栏报警列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/alerts/fault — 故障报警列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/alerts/battery — 电池报警列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/alerts/{id}/create-work-order — 生成维修工单</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>三个Tab切换及各自筛选独立</li>
+      <li>一键报修状态流转：未处理→已生成工单</li>
+      <li>仅"未处理"状态可生成工单</li>
+      <li>围栏报警地图展示</li>
+      <li>预警数据按设备维度关联车辆</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M8 驾驶行为 ========== -->
+<div class="module" id="m8">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">08</span>
+    <h2>驾驶行为</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>监控和评估驾驶过程中的风险行为，下设驾驶预警记录和驾驶报告（周报/月报），支持司机风险等级识别与改善建议。</p></div></div>
+
+    <div class="section"><div class="section-title">驾驶预警记录</div>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>预警类型枚举</td><td><span class="tag tag-gray">急加速</span> <span class="tag tag-gray">急减速</span> <span class="tag tag-gray">急转弯</span> <span class="tag tag-gray">疲劳驾驶</span> <span class="tag tag-gray">AEB制动</span></td></tr>
+        <tr><td>预警位置</td><td>默认收起，点击"查看位置"查询展示</td></tr>
+        <tr><td>行车速度</td><td>单位 km/h</td></tr>
+        <tr><td>数据来源</td><td>OBD设备上报的风险事件</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">驾驶报告</div>
+    <table>
+      <thead><tr><th>维度</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>报告周期</td><td>周报 / 月报（默认周报，可切换）</td></tr>
+        <tr><td>报告列表字段</td><td>VIN码 / 车牌号 / 报告时间 / 风险等级 / 行驶里程 / 触发风险数 / 驾驶评分</td></tr>
+        <tr><td>风险等级</td><td><span class="tag tag-green">安全司机</span> <span class="tag tag-blue">低危</span> <span class="tag tag-yellow">中危</span> <span class="tag tag-red">高危</span></td></tr>
+        <tr><td>报告详情</td><td>累计行驶里程/时长/平均车速/评分 + 里程趋势折线图 + 驾驶时间段占比环形图 + 行驶区域柱状图 + 风险事件统计折线图 + 改善建议</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">评估维度与指标</div>
+    <table>
+      <thead><tr><th>指标</th><th>判定标准</th></tr></thead>
+      <tbody>
+        <tr><td>急减速频次</td><td>加速度 &lt; -3 m/s²</td></tr>
+        <tr><td>急加速频次</td><td>加速度 &gt; 2.5 m/s²</td></tr>
+        <tr><td>急转弯频次</td><td>≥ 40km/h 行驶下频繁急打方向</td></tr>
+        <tr><td>夜间行驶次数</td><td>凌晨 00:00 ~ 05:00 长时间驾驶</td></tr>
+        <tr><td>疲劳驾驶次数</td><td>单次连续驾驶超过 4 小时</td></tr>
+        <tr><td>AEB制动频次</td><td>车辆多次自动介入制动</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">风险等级划分规则</div>
+    <table>
+      <thead><tr><th>等级</th><th>规则</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag-green">安全司机</span></td><td>最多1项中等风险，其余均为低风险或正常</td></tr>
+        <tr><td><span class="tag tag-blue">低危司机</span></td><td>2~3项中等风险，无严重危险行为</td></tr>
+        <tr><td><span class="tag tag-yellow">中危司机</span></td><td>1项严重行为，或4项及以上中等风险</td></tr>
+        <tr><td><span class="tag tag-red">高危司机</span></td><td>2项及以上严重行为</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">驾驶评分计算规则</div>
+    <table>
+      <thead><tr><th>数据项</th><th>急加速</th><th>急减速</th><th>急转弯</th><th>疲劳驾驶</th><th>AEB制动</th></tr></thead>
+      <tbody>
+        <tr><td>权重</td><td>20%</td><td>20%</td><td>20%</td><td>20%</td><td>20%</td></tr>
+      </tbody>
+    </table>
+    <table style="margin-top:4px">
+      <thead><tr><th>次数</th><th>急加速</th><th>急减速</th><th>急转弯</th><th>AEB制动</th><th>时长(h)</th><th>疲劳驾驶</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>100</td><td>100</td><td>100</td><td>100</td><td>0</td><td>100</td></tr>
+        <tr><td>2</td><td>90</td><td>90</td><td>90</td><td>90</td><td>1</td><td>90</td></tr>
+        <tr><td>4</td><td>80</td><td>80</td><td>80</td><td>80</td><td>2</td><td>80</td></tr>
+        <tr><td>6</td><td>70</td><td>70</td><td>70</td><td>70</td><td>3</td><td>70</td></tr>
+        <tr><td>7-10</td><td>60</td><td>60</td><td>60</td><td>60</td><td>4</td><td>60</td></tr>
+        <tr><td>&gt;10</td><td>50</td><td>50</td><td>50</td><td>50</td><td>≥5</td><td>50</td></tr>
+      </tbody>
+    </table>
+    <div class="desc" style="margin-top:4px"><p>综合评分 = Σ(各维度分 × 权重)，满分100分</p></div>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/driving/alerts — 驾驶预警记录（分页+筛选）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/driving/reports — 驾驶报告列表（分页+筛选，支持周/月）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/driving/reports/{id} — 驾驶报告详情</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/driving/reports/{id}/export — 导出报告Excel</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>预警记录筛选+分页+位置点击解析</li>
+      <li>周报/月报切换数据正确</li>
+      <li>评分计算与风险等级判定验证</li>
+      <li>报告详情各图表渲染</li>
+      <li>改善建议内容生成</li>
+      <li>报告导出Excel完整性</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M9 电池管理 ========== -->
+<div class="module" id="m9">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">09</span>
+    <h2>电池管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>监控新能源车辆电池状态与充放电数据。下设电池监控列表（含统计指标）和充放电记录（充电/放电两个Tab）。</p></div></div>
+
+    <div class="section"><div class="section-title">电池监控列表</div>
+    <table>
+      <thead><tr><th>数据指标</th><th>计算规则</th></tr></thead>
+      <tbody>
+        <tr><td>平均SOC值</td><td>所有车辆最新 SOC 的算术平均值（%）</td></tr>
+        <tr><td>平均电池温度</td><td>所有车辆最新电池温度平均值（℃）</td></tr>
+        <tr><td>平均续航里程</td><td>所有车辆最新续航里程平均值（km）</td></tr>
+        <tr><td>低电量报警</td><td>当前触发低电量报警（SOC≤20%）的车辆数量</td></tr>
+      </tbody>
+    </table>
+    <table style="margin-top:6px">
+      <thead><tr><th>列表字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>SOC值</td><td>最近一次上报的电池剩余电量百分比</td></tr>
+        <tr><td>电池温度</td><td>最近一次上报的电池组平均温度（℃）</td></tr>
+        <tr><td>续航里程</td><td>车辆信号【持续行驶里程（续航里程）】</td></tr>
+        <tr><td>累计充电次数</td><td>车辆接入平台后取充电记录次数（首次为0）</td></tr>
+        <tr><td>电池健康度(SOH)</td><td>最近一次上报的电池健康度值</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">电池监控详情页</div>
+    <table>
+      <thead><tr><th>图表</th><th>类型</th><th>计算规则</th></tr></thead>
+      <tbody>
+        <tr><td>日均电耗趋势</td><td>折线图（近30天）</td><td>日放电量 = 当日23:59:59累计耗电量 - 当日00:00:00累计耗电量<br>日里程 = 当日23:59:59总里程 - 当日00:00:00总里程<br>日均电耗 = (日放电量 / 日里程) × 100 (kWh/100km)</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">充电/放电记录</div>
+    <table>
+      <thead><tr><th>项目</th><th>充电记录</th><th>放电记录</th></tr></thead>
+      <tbody>
+        <tr><td>判定逻辑</td><td>车辆充电状态信号值=0100b/0011b 且 电流＞+2A 持续1分钟</td><td>车辆充电状态信号值=0000b 且 电流＜-2A 且 车速＞0 持续1分钟</td></tr>
+        <tr><td>核心字段</td><td>电压/电流/功率/充电前电量/充电后电量/充电时长/记录时间</td><td>电压/电流/功率/放电前电量/放电后电量/放电时长/记录时间</td></tr>
+        <tr><td>排序</td><td>按记录时间倒序</td><td>按记录时间倒序</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/battery/monitor — 电池监控列表</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/battery/monitor/{vin} — 电池详情+趋势图数据</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/battery/charging — 充电记录列表</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/battery/discharging — 放电记录列表</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>顶部统计指标聚合计算正确</li>
+      <li>充电/放电判定逻辑边界测试</li>
+      <li>SOC≤20%低电量标记</li>
+      <li>日均电耗趋势图计算</li>
+      <li>充电/放电Tab切换</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M10 行程管理 ========== -->
+<div class="module" id="m10">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">10</span>
+    <h2>行程管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>根据车辆位置信号和点火信号，自动切分并展示每一段行程的详细信息，包含起终点地图展示、车速曲线等。</p></div></div>
+
+    <div class="section"><div class="section-title">业务逻辑</div>
+    <table>
+      <thead><tr><th>规则</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>行程开始</td><td>设备开始上报GPS定位信息，且上报持续时长 ≥ 5分钟</td></tr>
+        <tr><td>行程结束</td><td>设备超过10分钟未上报定位数据 → 行程结束，生成记录</td></tr>
+        <tr><td>辅助判定</td><td>结合车辆点火信号（IGN ON/OFF）辅助判定行程起止</td></tr>
+        <tr><td>数据来源</td><td>OBD设备（位置/点火/车速信号）+ 车身信号</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">列表字段</div>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>开始/结束时间</td><td>行程起止时间</td></tr>
+        <tr><td>起点/终点</td><td>默认收起，点击"查看"解析详细地址</td></tr>
+        <tr><td>行驶里程</td><td>基于GPS轨迹累积计算(km)，保留1位小数</td></tr>
+        <tr><td>行程时长</td><td>结束时间 - 开始时间，格式 HH:mm</td></tr>
+        <tr><td>平均车速</td><td>基于GPS速度数据计算(km/h)</td></tr>
+        <tr><td>预警次数</td><td>该行程中触发的驾驶预警事件总数（关联驾驶行为模块）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">详情页布局</div>
+    <table>
+      <thead><tr><th>区域</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>左侧信息区</td><td>VIN码、车牌号、行驶里程、行程时长、平均/最高/最低车速、起点、终点</td></tr>
+        <tr><td>右侧地图区</td><td>轨迹展示（起点→终点，轨迹路径），支持缩放拖拽</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/trips — 行程记录列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/trips/{id} — 行程详情+轨迹数据</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>行程切分规则（5分钟开始 / 10分钟结束）</li>
+      <li>起终点地址解析展示</li>
+      <li>地图轨迹路径渲染</li>
+      <li>预警次数关联计算</li>
+      <li>车速曲线数据展示</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M11 维修管理 ========== -->
+<div class="module" id="m11">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">11</span>
+    <h2>维修管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>维修工单管理，支持通过风控预警一键报修生成工单，也支持在维修记录中手动创建维修记录，跟踪维修进度。</p></div></div>
+
+    <div class="section"><div class="section-title">业务逻辑</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>维修记录列表</td><td>字段：VIN码/车牌号/维修类型（故障类/电池类）/维修描述/开始时间/结束时间/操作人/维修状态</td></tr>
+        <tr><td>维修状态流转</td><td><span class="tag tag-yellow">维修中</span> → 点击"完成维修" → <span class="tag tag-green">维修完成</span></td></tr>
+        <tr><td>新建维修</td><td>选择维修车辆 + 维修类型（故障类/电池类）+ 维修描述 → 提交</td></tr>
+        <tr><td>数据来源</td><td>故障报警/电池报警"一键报修"自动创建；维修记录页手动创建</td></tr>
+        <tr><td>筛选</td><td>车牌号（模糊）、维修类型（模糊）、维修状态（下拉单选）、时间区间</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/repairs — 维修记录列表（分页+筛选）</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/repairs — 新建维修记录</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/repairs/{id} — 维修详情</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/repairs/{id}/complete — 完成维修</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/repairs/{id} — 删除维修记录</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>一键报修→维修记录联动</li>
+      <li>维修状态流转（维修中→维修完成）</li>
+      <li>新建维修表单校验</li>
+      <li>三种数据来源的维修记录汇总</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M12 实时监控 ========== -->
+<div class="module" id="m12">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">12</span>
+    <h2>实时监控</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>提供车辆实时位置监控和历史轨迹回放能力，支持多层级企业组织展示和车辆筛选。</p></div></div>
+
+    <div class="section"><div class="section-title">12.1 实时位置</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>页面布局</td><td>左侧车辆列表+筛选 | 右侧地图展示车辆位置</td></tr>
+        <tr><td>组织层级</td><td>按企业层级展示企业名称、所属车辆数量、所属车辆列表。企业/车辆均支持多选</td></tr>
+        <tr><td>车辆列表字段</td><td>车辆VIN + 车辆状态（在线/离线，依据设备在线状态判断）</td></tr>
+        <tr><td>地图打点</td><td>选中车辆后地图展示ICON+车牌号。缩放聚合，点击展示详情弹窗</td></tr>
+        <tr><td>车辆详情弹窗</td><td>VIN、车牌号、企业名称、设备名称、设备状态、当前车速、数据上报时间</td></tr>
+        <tr><td>刷新机制</td><td>地图比例最大时定时分批刷新</td></tr>
+        <tr><td>筛选</td><td>企业名称/VIN码（模糊匹配）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">12.2 轨迹回放</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>页面布局</td><td>左侧车辆列表 | 右上方地图 | 右下方行程记录列表</td></tr>
+        <tr><td>车辆选择</td><td>仅支持单选车辆，不支持选择企业</td></tr>
+        <tr><td>车辆状态</td><td>依据关联设备状态判断，多设备取关联时间最早的</td></tr>
+        <tr><td>轨迹展示</td><td>地图展示起点/终点/轨迹路径，支持拖动缩放</td></tr>
+        <tr><td>轨迹播放</td><td>支持倍速：1/2/4/8倍</td></tr>
+        <tr><td>行程记录列表</td><td>开始位置/结束位置（点击查看详细地址）/开始时间/结束时间/行驶时长/行驶里程</td></tr>
+        <tr><td>筛选</td><td>企业名称/VIN码 + 选择时间（日期选择器，格式YYYY-MM-DD）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/monitor/vehicles — 实时位置车辆列表</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/monitor/positions — 车辆实时位置数据</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/monitor/trajectory?vin={vin}&amp;date= — 轨迹数据</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/monitor/trajectory/trips — 行程记录列表</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>实时位置地图车辆打点 + 聚合</li>
+      <li>轨迹播放倍速控制（1/2/4/8倍）</li>
+      <li>企业/车辆多选联动地图</li>
+      <li>车辆在线/离线状态判断</li>
+      <li>轨迹回放中的行程列表与行程管理模块一致</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== M13 系统管理 ========== -->
+<div class="module" id="m13">
+  <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="num">13</span>
+    <h2>系统管理</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="module-body">
+
+    <div class="section"><div class="section-title">模块概述</div>
+    <div class="desc"><p>面向各层级租户用户的系统级管理，包括用户管理和角色管理。与业务管理中的用户/角色管理功能一致，但视角为租户用户侧。</p></div></div>
+
+    <div class="section"><div class="section-title">用户管理</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>用户列表</td><td>根据登录用户所在租户层级查询该租户下用户。字段：序号/用户昵称/登录邮箱/角色/创建时间/操作</td></tr>
+        <tr><td>新增用户</td><td>两步流程（同业务管理-用户管理）</td></tr>
+        <tr><td>编辑用户</td><td>回显当前信息，管理员角色置灰不可修改</td></tr>
+        <tr><td>重置密码</td><td>二次确认→重置为8位随机密码（大写字母+数字）→弹窗展示+复制</td></tr>
+        <tr><td>删除用户</td><td>仅删除当前租户下的角色权限关系。管理员账号不可删</td></tr>
+        <tr><td>筛选</td><td>用户昵称（模糊）/ 登录邮箱（模糊）/ 角色（多选）/ 创建时间（日期区间）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">角色管理</div>
+    <table>
+      <thead><tr><th>功能</th><th>逻辑</th></tr></thead>
+      <tbody>
+        <tr><td>角色列表</td><td>按创建时间正序展示。管理员角色由系统自动创建，不可编辑/删除</td></tr>
+        <tr><td>新增角色</td><td>输入名称（唯一校验）→ 配置功能权限（范围=该租户层级可配置范围）→ 数据权限默认全部下级</td></tr>
+        <tr><td>删除角色</td><td>未关联用户→二次确认后删除。已关联→提示"删除后用户无权限"</td></tr>
+        <tr><td>租户管理员账号同步</td><td>租户创建→同步管理员角色→设置管理员账号（角色固定不可选）→同步管理员账号到用户管理</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="section"><div class="section-title">API 接口</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/sys/users — 系统用户列表</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/sys/users — 创建用户</div>
+    <div class="api-box"><span class="method method-put">PUT</span> /api/v1/sys/users/{id} — 编辑用户</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/sys/users/{id} — 删除用户</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/sys/users/{id}/reset-password — 重置密码</div>
+    <div class="api-box"><span class="method method-get">GET</span> /api/v1/sys/roles — 系统角色列表</div>
+    <div class="api-box"><span class="method method-post">POST</span> /api/v1/sys/roles — 创建角色</div>
+    <div class="api-box"><span class="method method-delete">DELETE</span> /api/v1/sys/roles/{id} — 删除角色</div>
+    </div>
+
+    <div class="section"><div class="section-title">测试要点</div>
+    <ul class="test-list">
+      <li>管理员角色保护（不可编辑/不可删除）</li>
+      <li>租户管理员账号同步完整性</li>
+      <li>两步创建用户分支覆盖</li>
+      <li>重置密码弹窗+复制功能</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="margin-top: 32px; padding: 12px 0; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); text-align: center;">
+  智利车队管理平台 · 详细设计文档 v1.0 · 2026-06-04
+</div>
+
+</div>
+<script>
+  (function() {
+    // Open first module by default
+    var first = document.querySelector('.module');
+    if (first) first.classList.add('open');
+  })();
+</script>
+</body>
+</html>

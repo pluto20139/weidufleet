@@ -1,0 +1,15 @@
+schema_version: 1
+module_path: weidu_fleet/monitoring_features
+title: 车队监控与运营可视化
+scope:
+    - weidu-fleet/src/pages/Dashboard.tsx
+    - weidu-fleet/src/pages/Monitor.tsx
+    - weidu-fleet/src/pages/Battery.tsx
+    - weidu-fleet/src/pages/Driving.tsx
+    - weidu-fleet/src/pages/Trips.tsx
+    - weidu-fleet/src/pages/Fence.tsx
+    - weidu-fleet/src/pages/Repair.tsx
+source_files: []
+depends_on: []
+related_to:
+    - path: weidu_fleet/vehicles_domain

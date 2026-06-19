@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: weidu_fleet/admin_features
+title: 多租户管理与系统管理
+scope:
+    - weidu-fleet/src/pages/Login.tsx
+    - weidu-fleet/src/pages/Biz.tsx
+    - weidu-fleet/src/pages/Sys.tsx
+    - weidu-fleet/src/pages/Tenant.tsx
+source_files: []
+depends_on: []
+related_to:
+    - path: weidu_fleet/app_shell

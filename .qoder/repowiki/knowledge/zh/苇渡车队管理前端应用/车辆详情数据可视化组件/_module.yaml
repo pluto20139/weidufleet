@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: weidu_fleet/vehicles_domain
+title: 车辆详情数据可视化组件
+scope:
+    - weidu-fleet/src/pages/Vehicles/
+source_files: []
+depends_on: []
+related_to:
+    - path: weidu_fleet/monitoring_features

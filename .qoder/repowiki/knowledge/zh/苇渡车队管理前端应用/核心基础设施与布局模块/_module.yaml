@@ -1,0 +1,14 @@
+schema_version: 1
+module_path: weidu_fleet/core_infra
+title: 核心基础设施与布局模块
+scope:
+    - weidu-fleet/src/api/
+    - weidu-fleet/src/i18n/
+    - weidu-fleet/src/store/
+    - weidu-fleet/src/types/
+    - weidu-fleet/src/utils/
+    - weidu-fleet/src/components/Layout/
+    - weidu-fleet/src/styles/
+source_files: []
+depends_on: []
+related_to: []
