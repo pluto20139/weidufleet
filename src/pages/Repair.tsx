@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import {
   Card,
   Table,
@@ -18,7 +18,7 @@ import {
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
-import { getRepairItems, addRepairItem, completeRepairItem, getVehicles, revertFaultAlertStatus, revertBatteryAlertStatus } from '@/api/mock';
+import { getRepairItems, addRepairItem, completeRepairItem, deleteRepairItem, getVehicles, revertFaultAlertStatus, revertBatteryAlertStatus } from '@/api/mock';
 import type { RepairItem } from '@/types';
 import { maskVin, maskPlate, matchPlateSearch } from '@/utils/masking';
 
@@ -84,7 +84,7 @@ const Repair: React.FC = () => {
     completeRepairItem(id);
     const now = new Date().toISOString().slice(0, 10);
     setRepairs((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: '维修完成' as const, endTime: now } : r)),
+      prev.map((r) => (r.id === id ? { ...r, status: 'completed' as const, endTime: now } : r)),
     );
     message.success(t('toast.completed'));
   };
@@ -99,7 +99,9 @@ const Repair: React.FC = () => {
         revertBatteryAlertStatus(target.sourceAlertId);
       }
     }
-    setRepairs((prev) => prev.filter((r) => r.id !== id));
+    // P1-4: Call mock delete to persist removal
+    deleteRepairItem(id);
+    setRepairs(prev => prev.filter((r) => r.id !== id));
     message.success(t('toast.deleted'));
   };
 
@@ -125,8 +127,8 @@ const Repair: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (v: string) => (
-        <Tag color={v === '维修中' ? 'processing' : 'success'}>
-          {v}
+        <Tag color={v === 'repairing' ? 'processing' : 'success'}>
+          {t(`repair.status_${v}`, v)}
         </Tag>
       ),
     },
@@ -135,7 +137,7 @@ const Repair: React.FC = () => {
       key: 'action',
       render: (_: unknown, record: RepairItem) => (
         <Space>
-          {record.status === '维修中' && (
+          {record.status === 'repairing' && (
             <>
               <Button type="link" size="small" onClick={() => handleComplete(record.id)}>
                 {t('repair.action.complete', '完成维修')}
@@ -187,8 +189,8 @@ const Repair: React.FC = () => {
             onChange={setStatusFilter}
             options={[
               { value: 'all', label: t('common.all') },
-              { value: '维修中', label: '维修中' },
-              { value: '维修完成', label: '维修完成' },
+              { value: 'repairing', label: t('repair.status_repairing', '维修中') },
+              { value: 'completed', label: t('repair.status_completed', '维修完成') },
             ]}
           />
           <DatePicker.RangePicker format="YYYY-MM-DD" onChange={(dates) => setDateRange(dates as [Dayjs | null, Dayjs | null] | null)} />

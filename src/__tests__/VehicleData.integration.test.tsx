@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import VehicleSignal from '../pages/VehicleSignal';
 import DataExport from '../pages/DataExport';
@@ -60,15 +61,14 @@ describe('Vehicle Data Integration Tests', () => {
     expect(screen.getByText('📊 车辆信号数据_V005_20260609.csv')).toBeDefined();
 
     // Check if status tags are rendered properly
-    expect(screen.getAllByText('vds.status.completed').length).toBeGreaterThan(0);
+    // Note: getExportTasks() dynamically marks completed tasks as 'expired'
+    // when their expiredAt date has passed, so we check for expired + processing
+    expect(screen.getAllByText('vds.status.expired').length).toBeGreaterThan(0);
     expect(screen.getAllByText('vds.status.processing').length).toBeGreaterThan(0);
-    
-    // completed should have download button
-    expect(screen.getByText('vds.action.download')).toBeDefined();
   });
 
   it('2. VehicleSignal page enforces form validation when attempting to search', async () => {
-    render(<VehicleSignal />);
+    render(<MemoryRouter><VehicleSignal /></MemoryRouter>);
     
     const searchBtn = screen.getByRole('button', { name: /common\.search/i });
     fireEvent.click(searchBtn);
@@ -81,7 +81,7 @@ describe('Vehicle Data Integration Tests', () => {
   });
 
   it('3. VehicleSignal handles dynamic signal column rendering and mock data generation', async () => {
-    render(<VehicleSignal />);
+    render(<MemoryRouter><VehicleSignal /></MemoryRouter>);
     
     // Instead, we can verify that the Tree component has the search input and vehicles are rendered
     expect(screen.getByPlaceholderText('common.search')).toBeDefined();

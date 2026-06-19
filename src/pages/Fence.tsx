@@ -12,7 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import type { FenceItem } from '@/types';
 import { getVehicles } from '@/api/mock';
 import { maskVin, maskPlate, truncateLocation, matchVinSearch, matchPlateSearch } from '@/utils/masking';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import LocationPrivacy from '../components/LocationPrivacy';
 
 // --- Types & Mock Data ---
@@ -40,7 +40,7 @@ const genFences = (): ExtFenceItem[] => {
       type: b.type,
       vehicles: b.vehicles,
       alertType: b.alertType,
-      status: i % 3 === 0 ? '未生效' : '生效中',
+      status: i % 3 === 0 ? 'inactive' : 'active',
       address: b.address,
       operator: 'Admin',
       time: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')} ${String(8 + (i % 12)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}`,
@@ -128,6 +128,11 @@ const Fence: React.FC = () => {
   }, [fences, nameFilter, typeFilter, statusFilter, timeRange]);
 
   const handleDeleteFence = (id: string) => {
+    const record = fences.find(f => f.id === id);
+    if (record && record.status === 'active') {
+      message.warning('请先关闭围栏后再删除');
+      return;
+    }
     Modal.confirm({
       title: '确认删除',
       content: '删除后数据无法恢复，是否继续？',
@@ -139,8 +144,20 @@ const Fence: React.FC = () => {
   };
 
   const handleToggleStatus = (id: string, checked: boolean) => {
-    setFences(prev => prev.map(f => f.id === id ? { ...f, status: checked ? '生效中' as const : '未生效' as const } : f));
-    message.success(checked ? t('fence.activated') : t('fence.deactivated'));
+    if (!checked) {
+      // P1-2: Confirm before deactivating
+      Modal.confirm({
+        title: '确认关闭围栏？',
+        content: '关闭后围栏将停止生效，是否继续？',
+        onOk: () => {
+          setFences(prev => prev.map(f => f.id === id ? { ...f, status: 'inactive' as const } : f));
+          message.success(t('fence.deactivated'));
+        },
+      });
+      return;
+    }
+    setFences(prev => prev.map(f => f.id === id ? { ...f, status: 'active' as const } : f));
+    message.success(t('fence.activated'));
   };
 
   // === VEHICLE CONFIG LOGIC ===
@@ -174,6 +191,11 @@ const Fence: React.FC = () => {
 
   // === EDIT FENCE LOGIC ===
   const handleOpenEdit = (fence?: ExtFenceItem, viewOnly = false) => {
+    // P0-5: Guard - cannot edit active fences
+    if (fence && !viewOnly && fence.status === 'active') {
+      message.warning('请先关闭围栏后再编辑');
+      return;
+    }
     setIsViewing(viewOnly);
     if (fence) {
       form.setFieldsValue({
@@ -222,7 +244,7 @@ const Fence: React.FC = () => {
         alertType: values.alertType,
         address: values.type === 'center' ? values.address : '— —',
         radius: (values.radius || 1) * 1000,
-        status: selectedFence?.status || '生效中',
+        status: selectedFence?.status || 'inactive',
         vehicles: selectedFence?.vehicles || [],
         time: new Date().toISOString().slice(0, 16).replace('T', ' '),
         center: fenceCenter,
@@ -384,7 +406,7 @@ const Fence: React.FC = () => {
           <Space wrap>
             <Input placeholder={t('fence.name')} value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} />
             <Select placeholder={t('fence.type')} allowClear style={{ width: 140 }} value={typeFilter} onChange={setTypeFilter} options={[{ value: 'center', label: t('fence.center') }, { value: 'custom', label: t('fence.custom') }]} />
-            <Select placeholder={t('fence.status')} allowClear style={{ width: 140 }} value={statusFilter} onChange={setStatusFilter} options={[{ value: '生效中', label: t('fence.active') }, { value: '未生效', label: t('fence.inactive') }]} />
+            <Select placeholder={t('fence.status')} allowClear style={{ width: 140 }} value={statusFilter} onChange={setStatusFilter} options={[{ value: 'active', label: t('fence.active') }, { value: 'inactive', label: t('fence.inactive') }]} />
             <DatePicker.RangePicker
               showTime={{ format: 'HH:mm' }}
               format="YYYY-MM-DD HH:mm"
@@ -409,7 +431,7 @@ const Fence: React.FC = () => {
             { title: t('fence.type'), dataIndex: 'type', render: (v) => <Tag color={v === 'center' ? 'blue' : 'orange'}>{v === 'center' ? t('fence.center') : t('fence.custom')}</Tag> },
             { title: t('fence.vehicles'), dataIndex: 'vehicles', render: (v, r) => <a onClick={() => { setSelectedFence(r); setViewMode('config-vehicles'); }}>{v.length} {t('common.records', '辆')}</a> },
             { title: t('fence.alert_type'), dataIndex: 'alertType' },
-            { title: t('fence.status'), dataIndex: 'status', render: (v, r) => <Switch checked={v === '生效中'} checkedChildren={null} unCheckedChildren={null} onChange={c => handleToggleStatus(r.id, c)} /> },
+            { title: t('fence.status'), dataIndex: 'status', render: (v, r) => <Switch checked={v === 'active'} checkedChildren={null} unCheckedChildren={null} onChange={c => handleToggleStatus(r.id, c)} /> },
             { title: t('fence.address'), dataIndex: 'address', render: (v, r) => r.type === 'center' ? truncateLocation(v) : '— —' },
             { title: t('repair.recorder', '操作人'), dataIndex: 'operator' },
             { title: t('fence.time', '添加时间'), dataIndex: 'time' },
@@ -417,8 +439,8 @@ const Fence: React.FC = () => {
               render: (_, r) => (
                 <Space>
                   <Button type="link" size="small" onClick={() => handleOpenEdit(r, true)}>{t('fence.view')}</Button>
-                  <Button type="link" size="small" disabled={r.status === '生效中'} onClick={() => handleOpenEdit(r, false)}>{t('fence.action.edit')}</Button>
-                  <Button type="link" danger size="small" disabled={r.status === '生效中'} onClick={() => handleDeleteFence(r.id)}>{t('fence.action.del')}</Button>
+                  <Button type="link" size="small" disabled={r.status === 'active'} onClick={() => handleOpenEdit(r, false)}>{t('fence.action.edit')}</Button>
+                  <Button type="link" danger size="small" disabled={r.status === 'active'} onClick={() => handleDeleteFence(r.id)}>{t('fence.action.del')}</Button>
                 </Space>
               )
             }

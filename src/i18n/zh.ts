@@ -235,6 +235,8 @@ const zh = {
   'monitor.company': '智利运输公司',
   'monitor.vehicle_list': '车辆列表',
   'monitor.online': '在线',
+  'status.online': '在线',
+  'status.offline': '离线',
   'monitor.offline': '离线',
   'monitor.play': '▶ 播放',
   'monitor.speed': '速度',

@@ -17,7 +17,7 @@ import {
   DatabaseOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 
 interface SidebarProps {
   collapsed: boolean;

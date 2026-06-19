@@ -27,7 +27,7 @@ import { getDashboardStats, getVehicles, getAlertRanking } from '@/api/mock';
 import type { Vehicle } from '@/types';
 import { formatTime } from '@/utils/format';
 import { maskVin, maskPlate, truncateLocation } from '@/utils/masking';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
     { key: '30d', label: t('dash.30d') },
   ];
 
-  const onlineVehicles = vehicles.filter((v) => v.status === '在线');
+  const onlineVehicles = vehicles.filter((v) => v.status === 'online');
 
   return (
     <div>

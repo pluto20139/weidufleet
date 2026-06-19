@@ -235,6 +235,8 @@ const en = {
   'monitor.company': 'Chile Transport',
   'monitor.vehicle_list': 'Vehicles',
   'monitor.online': 'Online',
+  'status.online': 'Online',
+  'status.offline': 'Offline',
   'monitor.offline': 'Offline',
   'monitor.play': '▶ Play',
   'monitor.speed': 'Speed',

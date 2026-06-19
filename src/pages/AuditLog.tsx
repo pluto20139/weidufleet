@@ -174,7 +174,7 @@ const AuditLog: React.FC = () => {
       key: 'result',
       width: 100,
       render: (v: string, record: AuditLogType) => {
-        if (v === '成功') {
+        if (v === 'success') {
           return <Tag color="success">{t('audit.result_success')}</Tag>;
         }
         return (

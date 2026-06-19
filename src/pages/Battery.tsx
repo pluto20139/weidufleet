@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, Table, Tabs, Tag, Button, Input, Row, Col, Statistic, Modal, Descriptions, Space, Typography, DatePicker } from 'antd';
 import { SearchOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { getVehicles, getDashboardStats, getBatteryMonitorItems, getChargeRecords, getDischargeRecords, getDailyConsumption } from '@/api/mock';
 import { formatDuration } from '@/utils/format';
 import { maskVin, maskPlate } from '@/utils/masking';

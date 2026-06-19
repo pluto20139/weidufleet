@@ -10,7 +10,7 @@ export interface Vehicle {
   deviceModel?: string;
   purchase: string;
   totalKm: number;
-  status: '在线' | '离线';
+  status: 'online' | 'offline';
   lat: number;
   lng: number;
   soc: number;
@@ -187,7 +187,7 @@ export interface TripInfo {
 }
 
 export type PageKey = 'dashboard' | 'vehicles' | 'monitor' | 'risk' | 'driving' | 'battery' | 'trips' | 'fence' | 'repair' | 'tenant' | 'biz' | 'sys';
-export type Lang = 'zh' | 'en';
+export type Lang = 'zh' | 'en' | 'es';
 
 // --- New types for Trips, Fence, Repair, Tenant, Biz, Sys pages ---
 
@@ -220,7 +220,7 @@ export interface FenceItem {
   type: 'center' | 'custom';
   vehicles: string[];
   alertType: '出栏预警' | '入栏预警';
-  status: '生效中' | '未生效';
+  status: 'active' | 'inactive';
   address: string;
   time: string;
   radius?: number;
@@ -235,7 +235,7 @@ export interface RepairItem {
   startDate: string;
   endTime?: string;
   recorder?: string;
-  status: '维修中' | '维修完成';
+  status: 'repairing' | 'completed';
   sourceAlertId?: string;
   sourceAlertType?: 'fault' | 'battery';
 }
@@ -259,6 +259,7 @@ export interface AssetItem {
   vin: string;
   tenant: string;
   syncedDate: string;
+  deviceId?: string | null;
 }
 
 export interface BizUserItem {
@@ -286,7 +287,7 @@ export interface AuditLog {
   menu: string;           // 操作菜单（一级菜单名称）
   function: string;       // 操作功能（具象操作名称）
   content: string;        // 操作内容（按模板拼装的可读描述）
-  result: '成功' | '失败';
+  result: 'success' | 'fail';
   failReason?: string;    // 失败原因（失败时展示）
 }
 
@@ -318,6 +319,18 @@ export interface VehicleBatteryRecord {
   temp: number;
   range: number;
   time: string;
+}
+
+// 导出任务
+export interface ExportTask {
+  id: string;
+  filename: string;
+  filterSummary: string;
+  totalCount: number | null;
+  createdAt: string;
+  status: 'processing' | 'completed' | 'failed' | 'expired';
+  expiredAt?: string;
+  fileUrl?: string;
 }
 
 // 资产划拨记录

@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { useAppStore } from '@/store/useAppStore';
+import { message } from 'antd';
+import { useAppStore } from '@/store';
 
 const client = axios.create({
   baseURL: '/api',
@@ -22,6 +23,12 @@ client.interceptors.response.use(
       store.setToken(null);
       store.setUser(null);
       store.setPage('login');
+    }
+    if (error.response?.status === 403) {
+      const msg = error.response?.data?.message || '';
+      if (msg.includes('服务已过期') || msg.includes('expired')) {
+        message.error('当前租户服务已过期，请联系管理员续费');
+      }
     }
     console.error('API Error:', error);
     return Promise.reject(error);

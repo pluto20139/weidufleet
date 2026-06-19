@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Breadcrumb, Avatar, Button, Space, Dropdown, Modal, Form, Input, Select, message } from 'antd';
+import { Breadcrumb, Avatar, Button, Space, Dropdown, Modal, Form, Input, Select, message, Tag } from 'antd';
 import { UserOutlined, KeyOutlined, LogoutOutlined, SwapOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { getTenantItems } from '@/api/mock';
 
 const breadcrumbNameMap: Record<string, string> = {
@@ -25,9 +25,10 @@ const breadcrumbNameMap: Record<string, string> = {
 const langLabels: Record<string, { label: string; flag: string }> = {
   zh: { label: '中文', flag: 'ZH' },
   en: { label: 'English', flag: 'EN' },
+  es: { label: 'Español', flag: 'ES' },
 };
 
-const langOrder = ['zh', 'en'];
+const langOrder = ['zh', 'en', 'es'];
 
 const Topbar: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -124,11 +125,31 @@ const Topbar: React.FC = () => {
         {/* Tenant Select Dropdown */}
         <Select
           value={tenant}
-          onChange={(val) => setTenant(val)}
+          onChange={(val) => {
+            const selected = tenants.find(t => t.id === val);
+            if (selected?.expired) {
+              message.error('该租户服务已过期，无法切换');
+              return;
+            }
+            setTenant(val);
+          }}
           style={{ width: tenants.length === 1 ? 160 : 200 }}
           disabled={tenants.length === 1}
           suffixIcon={<SwapOutlined style={{ color: '#999' }} />}
-          options={tenants.map((t) => ({ value: t.id, label: t.name }))}
+          optionRender={(option) => {
+            const t = tenants.find(tn => tn.id === option.value);
+            return (
+              <span>
+                {option.label}
+                {t?.expired && <Tag color="red" style={{ marginLeft: 8 }}>服务过期</Tag>}
+              </span>
+            );
+          }}
+          options={tenants.map((t) => ({
+            value: t.id,
+            label: t.name,
+            disabled: t.expired === true,
+          }))}
         />
 
         {/* Language Switch Button */}

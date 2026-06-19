@@ -24,7 +24,7 @@ describe('mock data integrity', () => {
       expect(v.vin).toBeTruthy();
       expect(v.plate).toBeTruthy();
       expect(v.model).toBeTruthy();
-      expect(['在线', '离线']).toContain(v.status);
+      expect(['online', 'offline']).toContain(v.status);
       expect(v.soc).toBeGreaterThanOrEqual(0);
       expect(v.soc).toBeLessThanOrEqual(100);
       // Fields added in the bug-fix commit

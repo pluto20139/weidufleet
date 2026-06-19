@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, Table, Tabs, Tag, Button, Input, Select, Row, Col, Modal, Space, Typography, Statistic, Descriptions, DatePicker } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { getVehicles, getDrivingAlerts, getDrivingReports } from '@/api/mock';
 import LocationPrivacy from '../components/LocationPrivacy';
 import { maskVin, maskPlate } from '@/utils/masking';

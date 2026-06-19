@@ -32,25 +32,24 @@ const { RangePicker } = DatePicker;
 
 // ============ Mock Data ============
 const allSysUsers: BizUserItem[] = [
-  { id: 'su1', nickname: '张三', email: 'qinshuai321@163.com', role: '管理员', created: '2022-12-12 11:24:09' },
-  { id: 'su2', nickname: '李四', email: 'qinshuai322@163.com', role: '运营', created: '2022-11-12 11:24:09' },
-  { id: 'su3', nickname: '王五', email: 'qinshuai323@163.com', role: '运营、财务', created: '2022-10-12 11:24:09' },
-  { id: 'su4', nickname: '赵六', email: 'qinshuai324@163.com', role: '运营', created: '2022-09-12 11:24:09' },
-  { id: 'su5', nickname: '演示用户', email: 'qinshuai325@163.com', role: '财务', created: '2022-08-12 11:24:09' },
+  { id: 'su1', nickname: '张三', email: 'qinshuai321@163.com', role: 'Admin', created: '2022-12-12 11:24:09' },
+  { id: 'su2', nickname: '李四', email: 'qinshuai322@163.com', role: 'Operator', created: '2022-11-12 11:24:09' },
+  { id: 'su3', nickname: '王五', email: 'qinshuai323@163.com', role: 'Operator、Monitor', created: '2022-10-12 11:24:09' },
+  { id: 'su4', nickname: '赵六', email: 'qinshuai324@163.com', role: 'Operator', created: '2022-09-12 11:24:09' },
+  { id: 'su5', nickname: '演示用户', email: 'qinshuai325@163.com', role: 'Monitor', created: '2022-08-12 11:24:09' },
 ];
 
 const roleOptions = [
-  { value: '管理员', label: '管理员' },
-  { value: '平台运营', label: '平台运营' },
-  { value: '财务', label: '财务' },
+  { value: 'Admin', label: 'Admin' },
+  { value: 'Operator', label: 'Operator' },
+  { value: 'Monitor', label: 'Monitor' },
   { value: 'Dispatcher', label: 'Dispatcher' },
 ];
 
 const roleColors: Record<string, string> = {
-  '管理员': '#1677ff',
-  '平台运营': '#52c41a',
-  '财务': '#faad14',
-  '运营': '#52c41a',
+  'Admin': '#1677ff',
+  'Operator': '#52c41a',
+  'Monitor': '#faad14',
   'Dispatcher': '#722ed1',
 };
 
@@ -221,7 +220,7 @@ const Sys: React.FC = () => {
 
   // ---- Delete User ----
   const handleDeleteUser = (user: BizUserItem) => {
-    if (user.role.includes('管理员')) {
+    if (user.role === 'Admin' || user.role.includes('Admin')) {
       message.warning('管理员角色用户不可删除');
       return;
     }
@@ -263,7 +262,7 @@ const Sys: React.FC = () => {
         <Space>
           <Button type="link" size="small" onClick={() => handleResetPwd(record)}>重置密码</Button>
           <Button type="link" size="small" onClick={() => openEditUser(record)}>编辑</Button>
-          {record.role.includes('管理员') ? (
+          {(record.role === 'Admin' || record.role.includes('Admin')) ? (
             <Tooltip title="管理员角色用户不可删除">
               <Button type="link" danger size="small" disabled>删除</Button>
             </Tooltip>

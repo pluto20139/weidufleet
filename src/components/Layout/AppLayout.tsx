@@ -3,7 +3,7 @@ import { Layout } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 
 const { Sider, Header, Content } = Layout;
 
@@ -23,7 +23,10 @@ const AppLayout: React.FC = () => {
     if (page === 'login') {
       navigate('/login', { replace: true });
     }
-  }, [page, navigate]);
+    if (user?.mustChangePassword && location.pathname !== '/login') {
+      navigate('/login', { replace: true });
+    }
+  }, [page, navigate, user, location.pathname]);
 
   // If we're on the login page according to the store, don't render the layout
   if (page === 'login') {

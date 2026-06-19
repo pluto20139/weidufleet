@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import {
   Typography,
   Row,

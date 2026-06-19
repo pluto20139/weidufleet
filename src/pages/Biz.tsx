@@ -24,10 +24,10 @@ import {
 } from 'antd';
 import { SearchOutlined, PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { TreeDataNode, CheckboxChangeEvent } from 'antd';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import type { AssetItem, BizUserItem } from '@/types';
 import { maskVin, matchVinSearch } from '@/utils/masking';
-import { getAssetItems, getTenantItems } from '@/api/mock';
+import { getAssetItems, getTenantItems, transferAsset, batchTransferAssets } from '@/api/mock';
 
 // ============ Mock Data ============
 const tenantTreeData: TreeDataNode[] = [
@@ -84,16 +84,16 @@ const tenantInfo = {
 };
 
 const allAssets: AssetItem[] = [
-  { id: 'a1', vin: 'LFWDAU1H6N1A00001', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00' },
-  { id: 'a2', vin: 'LFWDAU1H6N1A00002', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00' },
-  { id: 'a3', vin: 'LFWDAU1H6N1A00003', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30' },
-  { id: 'a4', vin: 'LFWDAU1H6N1A00004', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30' },
-  { id: 'a5', vin: 'LFWDAU1H6N1A00005', tenant: 'Valparaiso Logistics', syncedDate: '2026-05-20 09:15' },
-  { id: 'a6', vin: 'LFWDAU1H6N1A00006', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00' },
-  { id: 'a7', vin: 'LFWDAU1H6N1A00007', tenant: 'Rancagua Fleet Services', syncedDate: '2026-05-25 11:00' },
-  { id: 'a8', vin: 'LFWDAU1H6N1A00008', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30' },
-  { id: 'a9', vin: 'LFWDAU1H6N1A00009', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00' },
-  { id: 'a10', vin: 'LFWDAU1H6N1A00010', tenant: 'Quillota Transporte', syncedDate: '2026-05-30 08:00' },
+  { id: 'a1', vin: 'LFWDAU1H6N1A00001', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00', deviceId: 'OBD-8000' },
+  { id: 'a2', vin: 'LFWDAU1H6N1A00002', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00', deviceId: 'OBD-8001' },
+  { id: 'a3', vin: 'LFWDAU1H6N1A00003', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30', deviceId: 'OBD-8002' },
+  { id: 'a4', vin: 'LFWDAU1H6N1A00004', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30', deviceId: 'OBD-8003' },
+  { id: 'a5', vin: 'LFWDAU1H6N1A00005', tenant: 'Valparaiso Logistics', syncedDate: '2026-05-20 09:15', deviceId: 'OBD-8004' },
+  { id: 'a6', vin: 'LFWDAU1H6N1A00006', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00', deviceId: null },
+  { id: 'a7', vin: 'LFWDAU1H6N1A00007', tenant: 'Rancagua Fleet Services', syncedDate: '2026-05-25 11:00', deviceId: null },
+  { id: 'a8', vin: 'LFWDAU1H6N1A00008', tenant: 'Santiago Transport', syncedDate: '2026-05-28 14:30', deviceId: null },
+  { id: 'a9', vin: 'LFWDAU1H6N1A00009', tenant: '智利物流集团', syncedDate: '2026-06-01 10:00', deviceId: null },
+  { id: 'a10', vin: 'LFWDAU1H6N1A00010', tenant: 'Quillota Transporte', syncedDate: '2026-05-30 08:00', deviceId: null },
 ];
 
 const allBizUsers: BizUserItem[] = [
@@ -155,6 +155,7 @@ const Biz: React.FC = () => {
   const [tenantAssetFilter, setTenantAssetFilter] = useState<string[] | undefined>(undefined);
   const [selectedAssetKeys, setSelectedAssetKeys] = useState<React.Key[]>([]);
   const [assetModal, setAssetModal] = useState<{ visible: boolean; type: string; record: AssetItem | null }>({ visible: false, type: '', record: null });
+  const [allocateTenantId, setAllocateTenantId] = useState<string | undefined>(undefined);
   const [syncLoading, setSyncLoading] = useState(false);
   const [assetSyncTimeRange, setAssetSyncTimeRange] = useState<[any, any] | null>(null);
 
@@ -166,11 +167,7 @@ const Biz: React.FC = () => {
   };
 
   const handleDeleteAsset = (record: AssetItem) => {
-    const vehicleList = [
-      'LFWDAU1H6N1A00001', 'LFWDAU1H6N1A00002', 'LFWDAU1H6N1A00003',
-      'LFWDAU1H6N1A00004', 'LFWDAU1H6N1A00005',
-    ];
-    if (vehicleList.includes(record.vin)) {
+    if (record.deviceId) {
       message.warning('该资产已关联设备，不可删除');
       return;
     }
@@ -445,14 +442,35 @@ const Biz: React.FC = () => {
       </Card>
 
       <Modal
-        title={`${assetModal.type === 'allocate' ? t('biz.allocate') : t('biz.history')} - ${assetModal.record?.vin ?? ''}`}
+        title={`${assetModal.type === 'allocate' ? t('biz.allocate') : t('biz.history')} - ${assetModal.record?.vin ?? (selectedAssetKeys.length > 0 ? `已选 ${selectedAssetKeys.length} 辆` : '')}`}
         open={assetModal.visible}
-        onCancel={() => setAssetModal({ visible: false, type: '', record: null })}
-        footer={
-          <Button onClick={() => setAssetModal({ visible: false, type: '', record: null })}>
-            {t('common.close')}
-          </Button>
-        }
+        onCancel={() => { setAssetModal({ visible: false, type: '', record: null }); setAllocateTenantId(undefined); }}
+        onOk={() => {
+          if (assetModal.type === 'allocate') {
+            if (!allocateTenantId) {
+              message.warning('请选择目标租户');
+              return;
+            }
+            if (assetModal.record) {
+              // Single asset transfer
+              transferAsset(assetModal.record.vin, allocateTenantId);
+              message.success('划拨成功');
+            } else if (selectedAssetKeys.length > 0) {
+              // Batch transfer
+              const vins = assets.filter(a => selectedAssetKeys.includes(a.id)).map(a => a.vin);
+              batchTransferAssets(vins, allocateTenantId);
+              message.success(`批量划拨 ${vins.length} 辆车成功`);
+              setSelectedAssetKeys([]);
+            }
+            setAssets(getAssetItems());
+            setAssetModal({ visible: false, type: '', record: null });
+            setAllocateTenantId(undefined);
+          } else {
+            setAssetModal({ visible: false, type: '', record: null });
+          }
+        }}
+        okText={assetModal.type === 'allocate' ? t('common.submit') : t('common.close')}
+        cancelText={t('common.cancel')}
       >
         {assetModal.type === 'allocate' ? (
           <Form layout="vertical">
@@ -465,7 +483,9 @@ const Biz: React.FC = () => {
             <Form.Item label={t('tenant.name')}>
               <Select
                 placeholder={t('biz.all_tenants')}
-                options={tenantsList.map((tn) => ({ value: tn, label: tn }))}
+                value={allocateTenantId}
+                onChange={(val) => setAllocateTenantId(val)}
+                options={getTenantItems().map((tn) => ({ value: tn.id, label: tn.name }))}
               />
             </Form.Item>
           </Form>

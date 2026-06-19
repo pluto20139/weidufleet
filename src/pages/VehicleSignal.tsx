@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Card, Pagination, Button, message } from 'antd';
+import { Card, Pagination, Button, message, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ExportOutlined } from '@ant-design/icons';
 import VehicleTreeComponent from '../components/VehicleData/VehicleTreeComponent';
@@ -7,9 +7,12 @@ import FilterBarComponent from '../components/VehicleData/FilterBarComponent';
 import DataGridComponent from '../components/VehicleData/DataGridComponent';
 import type { Dayjs } from 'dayjs';
 import { maskPlate } from '@/utils/masking';
+import { estimateExportRows, createExportTask } from '@/api/mock';
+import { useNavigate } from 'react-router-dom';
 
 const VehicleSignal: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // State
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
@@ -80,8 +83,27 @@ const VehicleSignal: React.FC = () => {
       message.warning(t('vds.warning.incomplete_form'));
       return;
     }
-    // Simulate export triggering
+    // Call estimate first
+    const hours = timeRange ? timeRange[1].diff(timeRange[0], 'hour') || 1 : 1;
+    const estimate = estimateExportRows({
+      vehicles: selectedVehicles.length,
+      hours,
+      signals: selectedSignals.length,
+    });
+    if (!estimate.allowed) {
+      Modal.warning({
+        title: '导出数据量过大',
+        content: `预估导出 ${estimate.estimatedRows.toLocaleString()} 行，超过 20 万行上限，请缩小查询范围后重试。`,
+      });
+      return;
+    }
+    // Create export task
+    const filename = `车辆信号数据_${new Date().toISOString().slice(0, 10)}.csv`;
+    const filterSummary = `多车(${selectedVehicles.length}辆) | ${hours}小时 | ${selectedSignals.length}个信号`;
+    createExportTask(filename, filterSummary, estimate.estimatedRows);
     message.success(t('vds.toast.exporting'));
+    // Navigate to data export page
+    navigate('/data-export');
   };
 
   // V1.2: display data with masked plate (export keeps raw data)

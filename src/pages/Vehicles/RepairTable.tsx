@@ -42,15 +42,15 @@ const RepairTable: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (v: string) => {
-        const color = v === '维修完成' ? 'green' : 'blue';
-        return <Tag color={color}>{v}</Tag>;
+        const color = v === 'completed' ? 'green' : 'blue';
+        return <Tag color={color}>{t(`repair.status_${v}`, v)}</Tag>;
       },
     },
     {
       title: t('common.action', '操作'),
       key: 'action',
       render: (_: any, r: RepairItem) =>
-        r.status === '维修中' ? (
+        r.status === 'repairing' ? (
           <Button type="link" size="small" onClick={() => handleComplete(r.id)}>
             {t('repair.complete', '完成维修')}
           </Button>

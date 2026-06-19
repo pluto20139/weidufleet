@@ -1,26 +1,30 @@
 import React from 'react';
 import { Table, Tag, Button, Spin } from 'antd';
-import { DownloadOutlined, CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { DownloadOutlined, CheckCircleOutlined, SyncOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
-
-interface ExportRecord {
-  id: string;
-  filename: string;
-  filterSummary: string;
-  totalCount: number | null;
-  createdAt: string;
-  status: 'processing' | 'completed';
-}
+import type { ExportTask } from '@/types';
 
 interface ExportRecordProps {
-  data: ExportRecord[];
+  data: ExportTask[];
 }
 
 const ExportRecordComponent: React.FC<ExportRecordProps> = ({ data }) => {
   const { t } = useTranslation();
 
-  const columns: ColumnsType<ExportRecord> = [
+  const handleDownload = (record: ExportTask) => {
+    if (record.status === 'completed' && record.fileUrl) {
+      // Use window.open or anchor download
+      const a = document.createElement('a');
+      a.href = record.fileUrl;
+      a.download = record.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+  const columns: ColumnsType<ExportTask> = [
     {
       title: t('vds.col.filename'),
       dataIndex: 'filename',
@@ -42,19 +46,35 @@ const ExportRecordComponent: React.FC<ExportRecordProps> = ({ data }) => {
       title: t('vds.col.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        if (status === 'completed') {
-          return (
-            <Tag color="success" icon={<CheckCircleOutlined />}>
-              {t('vds.status.completed')}
-            </Tag>
-          );
+      render: (status: ExportTask['status']) => {
+        switch (status) {
+          case 'completed':
+            return (
+              <Tag color="success" icon={<CheckCircleOutlined />}>
+                {t('vds.status.completed')}
+              </Tag>
+            );
+          case 'processing':
+            return (
+              <Tag color="processing" icon={<SyncOutlined spin />}>
+                {t('vds.status.processing')}
+              </Tag>
+            );
+          case 'failed':
+            return (
+              <Tag color="error" icon={<CloseCircleOutlined />}>
+                {t('vds.status.failed', '已失败')}
+              </Tag>
+            );
+          case 'expired':
+            return (
+              <Tag color="default" icon={<ClockCircleOutlined />}>
+                {t('vds.status.expired', '已过期')}
+              </Tag>
+            );
+          default:
+            return <Tag>{status}</Tag>;
         }
-        return (
-          <Tag color="processing" icon={<SyncOutlined spin />}>
-            {t('vds.status.processing')}
-          </Tag>
-        );
       },
     },
     {
@@ -63,14 +83,29 @@ const ExportRecordComponent: React.FC<ExportRecordProps> = ({ data }) => {
       render: (_, record) => {
         if (record.status === 'completed') {
           return (
-            <Button type="link" icon={<DownloadOutlined />} onClick={() => console.log('Download', record.id)}>
+            <Button type="link" icon={<DownloadOutlined />} onClick={() => handleDownload(record)}>
               {t('vds.action.download')}
             </Button>
           );
         }
+        if (record.status === 'processing') {
+          return (
+            <Button type="link" disabled icon={<Spin size="small" />}>
+              {t('vds.status.processing')}
+            </Button>
+          );
+        }
+        if (record.status === 'expired') {
+          return (
+            <Button type="link" disabled>
+              {t('vds.status.expired', '已过期')}
+            </Button>
+          );
+        }
+        // failed
         return (
-          <Button type="link" disabled icon={<Spin size="small" />}>
-            {t('vds.status.processing')}
+          <Button type="link" disabled>
+            {t('vds.status.failed', '已失败')}
           </Button>
         );
       },

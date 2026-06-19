@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, Table, Button, Input, Select, DatePicker, Row, Col, Space, Typography, Checkbox, Tree, message, Tooltip, Slider, Tag } from 'antd';
 import { SearchOutlined, PlayCircleOutlined, PauseCircleOutlined, CarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { getVehicles, getOnlineVehicles, getOfflineVehicles, getTrajectoryPoints, getTrips } from '@/api/mock';
 import { MapContainer, TileLayer, CircleMarker, Tooltip as LTooltip, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -110,7 +110,7 @@ const Monitor: React.FC = () => {
       title: `${tName} (${list.length})`,
       key: `tenant-${tName}`,
       children: list.map((v) => ({
-        title: <span><span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag></span>,
+        title: <span><span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === 'online' ? 'green' : 'default'} style={{ fontSize: 10 }}>{t(`status.${v.status}`, v.status)}</Tag></span>,
         key: `vehicle-${v.vin}`,
         isLeaf: true,
       })),
@@ -232,7 +232,7 @@ const Monitor: React.FC = () => {
               >
                 <Space size={4}>
                   <span style={{ fontSize: 10, color: '#94a3b8' }}>●</span>
-                  <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === '在线' ? 'green' : 'default'} style={{ fontSize: 10 }}>{v.status}</Tag>
+                  <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === 'online' ? 'green' : 'default'} style={{ fontSize: 10 }}>{t(`status.${v.status}`, v.status)}</Tag>
                 </Space>
               </div>
             ))}
