@@ -316,7 +316,7 @@ const Biz: React.FC = () => {
 
   // Assets tab -------------------------
   const handleAssetSearch = () => {
-    let filtered = [...getAssetItems()];
+    let filtered: AssetItem[] = allAssets;
     if (vinAssetFilter) {
       filtered = filtered.filter((a) => a.vin.toLowerCase() === vinAssetFilter.toLowerCase());
     }
