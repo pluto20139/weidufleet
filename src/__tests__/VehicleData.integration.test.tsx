@@ -57,13 +57,14 @@ describe('Vehicle Data Integration Tests', () => {
     expect(screen.getByText('sidebar.data_export')).toBeDefined();
     
     // Check if the two mock files are rendered
-    expect(screen.getByText('📊 车辆信号数据_V001_20260610.csv')).toBeDefined();
-    expect(screen.getByText('📊 车辆信号数据_V005_20260609.csv')).toBeDefined();
+    expect(screen.getByText(/📊 车辆信号数据_V001_\d{8}\.csv/)).toBeDefined();
+    expect(screen.getByText(/📊 车辆信号数据_V005_\d{8}\.csv/)).toBeDefined();
 
     // Check if status tags are rendered properly
     // Note: getExportTasks() dynamically marks completed tasks as 'expired'
-    // when their expiredAt date has passed, so we check for expired + processing
-    expect(screen.getAllByText('vds.status.expired').length).toBeGreaterThan(0);
+    // when their expiredAt date has passed. But since expired tasks are > 7 days old,
+    // they are filtered out by the default date picker range. So we check for completed + processing
+    expect(screen.getAllByText('vds.status.completed').length).toBeGreaterThan(0);
     expect(screen.getAllByText('vds.status.processing').length).toBeGreaterThan(0);
   });
 

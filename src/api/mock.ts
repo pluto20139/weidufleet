@@ -39,21 +39,16 @@ export function getDashboardStats() {
 
 export function getAlertRanking() {
   const tenantVehicles = getFilteredVehicles(false);
-  return tenantVehicles.slice(0, 8).map((v, i) => {
+  const rows = tenantVehicles.slice(0, 8).map((v, i) => {
     const drive = (i * 7 + 3) % 12;
     const fence = (i * 5 + 1) % 6;
     const fault = (i * 3 + 2) % 4;
     const lowBat = v.soc <= 20 ? 1 : 0;
-    return {
-      rank: i + 1,
-      plate: v.plate,
-      drive,
-      fence,
-      fault,
-      lowBat,
-      total: drive + fence + fault + lowBat,
-    };
+    return { plate: v.plate, drive, fence, fault, lowBat, total: drive + fence + fault + lowBat };
   });
+  return rows
+    .sort((a, b) => b.total - a.total)
+    .map((r, i) => ({ rank: i + 1, ...r }));
 }
 
 
@@ -207,9 +202,40 @@ export function getDrivingAlerts(): DrivingAlert[] {
 const reportLevels: DrivingReport['level'][] = ['安全司机', '低危司机', '中危司机', '高危司机'];
 
 export function getDrivingReports(): DrivingReport[] {
+  const calcCountScore = (count: number) => {
+    if (count === 0) return 100;
+    if (count <= 2) return 90;
+    if (count <= 4) return 80;
+    if (count <= 6) return 70;
+    if (count <= 10) return 60;
+    return 50;
+  };
+  const calcFatigueScore = (hours: number) => {
+    if (hours <= 0) return 100;
+    if (hours <= 1) return 90;
+    if (hours <= 2) return 80;
+    if (hours <= 3) return 70;
+    if (hours <= 4) return 60;
+    return 50;
+  };
+
   const tenantVehicles = getFilteredVehicles(false);
   return tenantVehicles.slice(0, 8).map((v, i) => {
-    const risks = Math.floor(Math.random() * 10);
+    const acc = Math.floor(Math.random() * 8);
+    const dec = Math.floor(Math.random() * 8);
+    const turn = Math.floor(Math.random() * 6);
+    const aeb = Math.floor(Math.random() * 3);
+    const fatigueHours = Math.floor(Math.random() * 4);
+    
+    const score = Math.round(
+      calcCountScore(acc) * 0.2 +
+      calcCountScore(dec) * 0.2 +
+      calcCountScore(turn) * 0.2 +
+      calcCountScore(aeb) * 0.2 +
+      calcFatigueScore(fatigueHours) * 0.2
+    );
+
+    const risks = acc + dec + turn + aeb;
     let level: DrivingReport['level'] = '安全司机';
     if (risks > 6) level = '高危司机';
     else if (risks > 3) level = '中危司机';
@@ -223,7 +249,7 @@ export function getDrivingReports(): DrivingReport[] {
       km: Math.floor(500 + Math.random() * 3000),
       risks,
       level,
-      score: Math.max(100 - risks * 8, 40),
+      score,
       cumulativeHours: +(Math.floor(500 + Math.random() * 3000) / 65).toFixed(1),
       avgSpeed: +((Math.floor(500 + Math.random() * 3000) / 7 * 0.65)).toFixed(1),
       suggestions: risks > 6
@@ -607,50 +633,62 @@ export function addTenantItem(tenant: Omit<TenantItem, 'id'>) {
 }
 
 
+const getPastDate = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+};
+
+const getCompactDate = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10).replace(/-/g, '');
+};
+
 // --- Export Task mock data ---
 let _exportTasks: ExportTask[] = [
   {
     id: 'exp1',
-    filename: '车辆信号数据_V001_20260610.csv',
+    filename: `车辆信号数据_V001_${getCompactDate(1)}.csv`,
     filterSummary: '多车(2辆) | 1小时 | 8个信号',
     totalCount: null,
-    createdAt: '2026-06-10 16:35:00',
+    createdAt: getPastDate(1),
     status: 'processing',
   },
   {
     id: 'exp2',
-    filename: '车辆信号数据_V005_20260609.csv',
+    filename: `车辆信号数据_V005_${getCompactDate(3)}.csv`,
     filterSummary: 'VIN: LFWDAU1... | 24小时 | 3个信号',
     totalCount: 27567,
-    createdAt: '2026-06-09 09:12:33',
+    createdAt: getPastDate(3),
     status: 'completed',
-    expiredAt: '2026-06-16 09:12:33',
+    expiredAt: getPastDate(-4), // 7 days after creation (created 3 days ago, expires in 4 days)
     fileUrl: '/mock/exports/exp2.csv',
   },
   {
     id: 'exp3',
-    filename: '车辆信号数据_V003_20260605.csv',
+    filename: `车辆信号数据_V003_${getCompactDate(10)}.csv`,
     filterSummary: 'VIN: LFWDAU3... | 12小时 | 5个信号',
     totalCount: 15230,
-    createdAt: '2026-06-05 14:20:00',
+    createdAt: getPastDate(10),
     status: 'completed',
-    expiredAt: '2026-06-06 14:20:00', // already expired (past date)
+    expiredAt: getPastDate(9), // already expired (past date)
     fileUrl: '/mock/exports/exp3.csv',
   },
   {
     id: 'exp4',
-    filename: '车辆信号数据_V007_20260608.csv',
+    filename: `车辆信号数据_V007_${getCompactDate(12)}.csv`,
     filterSummary: 'VIN: LFWDAU7... | 6小时 | 4个信号',
     totalCount: 0,
-    createdAt: '2026-06-08 10:00:00',
+    createdAt: getPastDate(12),
     status: 'failed',
   },
 ];
 
 export function getExportTasks(): ExportTask[] {
-  const now = new Date().toISOString();
+  const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
   return _exportTasks.map(t => {
-    if (t.status === 'completed' && t.expiredAt && now > t.expiredAt) {
+    if (t.status === 'completed' && t.expiredAt && nowStr > t.expiredAt) {
       return { ...t, status: 'expired' as const };
     }
     return t;

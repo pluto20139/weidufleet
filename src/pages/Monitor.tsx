@@ -217,25 +217,18 @@ const Monitor: React.FC = () => {
           style={{ width: '20%', height: 500, borderRadius: 8, border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         >
           <div style={{ height: '100%', overflowY: 'auto', padding: '4px 0' }}>
-            {vehicles.map((v) => (
-              <div key={v.vin} onClick={() => setTrajSelectedVehicle(v.plate)}
-                style={{
-                  padding: '8px 14px', cursor: 'pointer', fontSize: 13, transition: 'all 0.15s',
-                  fontWeight: trajSelectedVehicle === v.plate ? 600 : 400,
-                  color: trajSelectedVehicle === v.plate ? '#4f46e5' : '#374151',
-                  background: trajSelectedVehicle === v.plate ? '#eef2ff' : 'transparent',
-                  borderLeft: trajSelectedVehicle === v.plate ? '3px solid #4f46e5' : '3px solid transparent',
-                  borderBottom: '1px solid #f3f4f6',
-                }}
-                onMouseEnter={(e) => { if (trajSelectedVehicle !== v.plate) (e.currentTarget.style.background = '#f8fafc'); }}
-                onMouseLeave={(e) => { if (trajSelectedVehicle !== v.plate) (e.currentTarget.style.background = 'transparent'); }}
-              >
-                <Space size={4}>
-                  <span style={{ fontSize: 10, color: '#94a3b8' }}>●</span>
-                  <span style={{ color: '#999', fontSize: 12 }}>{maskVin(v.vin)}</span> <Tag color={v.status === 'online' ? 'green' : 'default'} style={{ fontSize: 10 }}>{t(`status.${v.status}`, v.status)}</Tag>
-                </Space>
-              </div>
-            ))}
+            <Tree
+              defaultExpandAll
+              treeData={enterpriseTreeData}
+              selectedKeys={trajSelectedVehicle ? [`vehicle-${vehicles.find(v => v.plate === trajSelectedVehicle)?.vin}`] : []}
+              onSelect={(selectedKeys, info) => {
+                if (info.node.isLeaf) {
+                  const vin = info.node.key.toString().replace('vehicle-', '');
+                  const v = vehicles.find(v => v.vin === vin);
+                  if (v) setTrajSelectedVehicle(v.plate);
+                }
+              }}
+            />
           </div>
         </Card>
 

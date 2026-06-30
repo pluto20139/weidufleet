@@ -130,12 +130,12 @@ const Fence: React.FC = () => {
   const handleDeleteFence = (id: string) => {
     const record = fences.find(f => f.id === id);
     if (record && record.status === 'active') {
-      message.warning('请先关闭围栏后再删除');
+      message.warning(t('fence.close_before_delete', '请先关闭围栏后再删除'));
       return;
     }
     Modal.confirm({
-      title: '确认删除',
-      content: '删除后数据无法恢复，是否继续？',
+      title: t('fence.confirm_delete_title', '确认删除'),
+      content: t('fence.confirm_delete_content', '删除后数据无法恢复，是否继续？'),
       onOk: () => {
         setFences(prev => prev.filter(f => f.id !== id));
         message.success(t('toast.deleted'));
@@ -147,8 +147,8 @@ const Fence: React.FC = () => {
     if (!checked) {
       // P1-2: Confirm before deactivating
       Modal.confirm({
-        title: '确认关闭围栏？',
-        content: '关闭后围栏将停止生效，是否继续？',
+        title: t('fence.confirm_close_title', '确认关闭围栏？'),
+        content: t('fence.confirm_close_content', '关闭后围栏将停止生效，是否继续？'),
         onOk: () => {
           setFences(prev => prev.map(f => f.id === id ? { ...f, status: 'inactive' as const } : f));
           message.success(t('fence.deactivated'));

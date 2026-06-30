@@ -19,6 +19,7 @@ import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { getRepairItems, addRepairItem, completeRepairItem, deleteRepairItem, getVehicles, revertFaultAlertStatus, revertBatteryAlertStatus } from '@/api/mock';
+import { faultTypeLabels, batteryTypeLabels } from '@/utils/alertLabels';
 import type { RepairItem } from '@/types';
 import { maskVin, maskPlate, matchPlateSearch } from '@/utils/masking';
 
@@ -253,6 +254,7 @@ const Repair: React.FC = () => {
             rules={[{ required: true, message: t('repair.type') }]}
           >
             <Select
+              onChange={() => form.setFieldValue('description', undefined)}
               options={[
                 { value: '故障类', label: t('repair.fault') },
                 { value: '电池类', label: t('repair.battery') },
@@ -264,9 +266,13 @@ const Repair: React.FC = () => {
             label={t('repair.desc')}
             rules={[{ required: true, message: t('repair.desc') }]}
           >
-            <Input.TextArea
-              rows={3}
-              placeholder={watchedType === '电池类' ? '请输入电池类报警描述，如SOC过低、电池高温等' : '请输入故障类报警描述，如VDC故障、CDCU故障等'}
+            <Select
+              placeholder={watchedType === '电池类' ? '请选择电池类预警' : '请选择故障类预警'}
+              options={
+                watchedType === '电池类'
+                  ? Object.entries(batteryTypeLabels).map(([k, v]) => ({ value: v, label: v }))
+                  : Object.entries(faultTypeLabels).map(([k, v]) => ({ value: v, label: v }))
+              }
             />
           </Form.Item>
         </Form>

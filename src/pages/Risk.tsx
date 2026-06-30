@@ -9,38 +9,12 @@ import { maskVin, maskPlate, truncateLocation } from '@/utils/masking';
 import type { FenceAlert, FaultAlert, BatteryAlert } from '@/types';
 import { MapContainer, TileLayer, Circle, Marker, Tooltip as LTooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { faultTypeLabels, batteryTypeLabels, faultLabel, batteryLabel } from '@/utils/alertLabels';
 
 const { Title: Ttl, Text } = Typography;
 const { Option } = Select;
 
-const faultTypeLabels: Record<string, string> = {
-  'VDC': 'VDC故障报警',
-  'CDCU': 'CDCU故障报警',
-  'BDCU': 'BDCU故障报警',
-  'ADAS': 'ADAS故障报警',
-  'DC-DC温度': 'DC-DC温度报警',
-  'DC-DC状态': 'DC-DC状态报警',
-  '驱动电机控制器温度': '驱动电机控制器温度报警',
-  '驱动电机温度': '驱动电机温度报警',
-  '高压互锁状态': '高压互锁状态报警',
-};
 
-const batteryTypeLabels: Record<string, string> = {
-  'SOC过低': 'SOC过低报警',
-  '电池高温': '电池高温报警',
-  'SOC跳变': 'SOC跳变报警',
-  '充电故障': '充电故障报警',
-  '温差报警': '温差报警',
-  '储能过压': '储能过压报警',
-  '储能欠压': '储能欠压报警',
-  '单体过压': '单体过压报警',
-  '单体欠压': '单体欠压报警',
-  'SOC过高': 'SOC过高报警',
-  '储能不匹配': '储能不匹配报警',
-  '单体一致性差': '单体一致性差报警',
-  '绝缘报警': '绝缘报警',
-  '储能过充': '储能过充报警',
-};
 
 const fenceTypeMap: Record<string, string> = {
   'in': '入栏预警',
@@ -137,13 +111,13 @@ const Risk: React.FC = () => {
   }, []);
 
   const handleRepairFault = (record: FaultAlert) => {
-    addRepairItem(record.plate, record.vin || '', '故障类', `${record.type} abnormal`, record.id, 'fault');
+    addRepairItem(record.plate, record.vin || '', '故障类', faultLabel(record.type), record.id, 'fault');
     setFaultData(prev => prev.map(a => a.id === record.id ? { ...a, status: 'WorkOrder' } : a));
     message.success(t('toast.created', '已生成维修工单'));
   };
 
   const handleRepairBattery = (record: BatteryAlert) => {
-    addRepairItem(record.plate, record.vin || '', '电池类', `${record.type} abnormal`, record.id, 'battery');
+    addRepairItem(record.plate, record.vin || '', '电池类', batteryLabel(record.type), record.id, 'battery');
     setBatData(prev => prev.map(a => a.id === record.id ? { ...a, status: 'WorkOrder' } : a));
     message.success(t('toast.created', '已生成维修工单'));
   };
