@@ -212,6 +212,7 @@ export interface TripDetail {
   minSpeed: number;
   alerts: TripAlertItem[];
   alertCount: number;
+  trajectory?: [number, number][];
 }
 
 export interface FenceItem {

@@ -108,6 +108,33 @@ const tripData: TripDetail[] = [
     ],
     alertCount: 1,
   },
+  {
+    id: 't11', vin: 'LJ8T7AD0000100000', plate: 'KLTX56',
+    startTime: '2026-07-10 08:30', endTime: '2026-07-10 09:45',
+    startLocation: '智利圣地亚哥马伊普区工业大道5500号', endLocation: '智利圣地亚哥拉佛罗里达区瓦兰多街1780号',
+    distance: 22, duration: '01:15', avgSpeed: 18, maxSpeed: 45, minSpeed: 0,
+    alerts: [],
+    alertCount: 0,
+    trajectory: [[-33.45, -70.66], [-33.44, -70.65], [-33.43, -70.64], [-33.44, -70.63], [-33.45, -70.62]],
+  },
+  {
+    id: 't12', vin: 'LJ8T7AD0000100001', plate: 'BDFG78',
+    startTime: '2026-07-12 14:00', endTime: '2026-07-12 16:30',
+    startLocation: '智利圣地亚哥普达韦尔区机场路4500号', endLocation: '智利瓦尔帕莱索港码头大道150号',
+    distance: 120, duration: '02:30', avgSpeed: 48, maxSpeed: 95, minSpeed: 0,
+    alerts: [{ id: 'a12-1', type: '超速', time: '2026-07-12 15:10' }],
+    alertCount: 1,
+    trajectory: [[-33.45, -70.66], [-33.38, -70.78], [-33.15, -71.12], [-33.02, -71.45], [-33.04, -71.62]],
+  },
+  {
+    id: 't13', vin: 'LJ8T7AD0000100002', plate: 'PRHM23',
+    startTime: '2026-07-14 10:00', endTime: '2026-07-14 10:45',
+    startLocation: '智利瓦尔帕莱索港码头大道150号', endLocation: '智利比尼亚德尔马市海滨路789号',
+    distance: 12, duration: '00:45', avgSpeed: 16, maxSpeed: 50, minSpeed: 0,
+    alerts: [],
+    alertCount: 0,
+    trajectory: [[-33.04, -71.62], [-33.03, -71.63], [-33.02, -71.61], [-33.01, -71.62], [-33.02, -71.64]],
+  },
 ];
 
 export function getTripDetails(): TripDetail[] {

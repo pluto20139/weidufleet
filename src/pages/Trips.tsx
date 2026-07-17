@@ -123,25 +123,30 @@ const Trips: React.FC = () => {
           </Col>
           <Col xs={24} lg={14}>
             <Card title={t('trip.traj')} style={{ height: '100%' }}>
-              {isWithinTrajectoryWindow(trip.endTime) ? (
-                <MapContainer
-                  center={[-33.44, -70.65]}
-                  zoom={14}
-                  style={{ height: 500, width: '100%' }}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Polyline positions={tripPositions} pathOptions={{ color: '#1677ff', weight: 3 }} />
-                  <Marker position={tripPositions[0]!}>
-                    <LTooltip permanent>{t('veh.info.start')}</LTooltip>
-                  </Marker>
-                  <Marker position={tripPositions[tripPositions.length - 1]!}>
-                    <LTooltip permanent>{t('veh.info.end')}</LTooltip>
-                  </Marker>
-                </MapContainer>
-              ) : (
+              {isWithinTrajectoryWindow(trip.endTime) ? (() => {
+                const currentTrajectory = trip.trajectory || tripPositions;
+                const mapCenter = currentTrajectory[0] || [-33.44, -70.65];
+                const dynamicZoom = (trip.trajectory && trip.distance > 50) ? 9 : 13;
+                return (
+                  <MapContainer
+                    center={mapCenter}
+                    zoom={dynamicZoom}
+                    style={{ height: 500, width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Polyline positions={currentTrajectory} pathOptions={{ color: '#1677ff', weight: 3 }} />
+                    <Marker position={currentTrajectory[0]!}>
+                      <LTooltip permanent>{t('veh.info.start')}</LTooltip>
+                    </Marker>
+                    <Marker position={currentTrajectory[currentTrajectory.length - 1]!}>
+                      <LTooltip permanent>{t('veh.info.end')}</LTooltip>
+                    </Marker>
+                  </MapContainer>
+                );
+              })() : (
                 <div style={{ height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Result
                     status="warning"
