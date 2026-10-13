@@ -34,7 +34,7 @@ function Root() {
         },
       }}
     >
-      <BrowserRouter>
+      <BrowserRouter basename="/fleet">
         <App />
       </BrowserRouter>
     </ConfigProvider>

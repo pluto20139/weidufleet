@@ -63,3 +63,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+Let's think step by step
+
+## 5. Thinking Language (思考语言)
+- Always write your thinking process (`<thought>` tags or internal monologue) in Chinese. (始终使用中文编写思考过程和 `<thought>` 标签内的内容。)
+

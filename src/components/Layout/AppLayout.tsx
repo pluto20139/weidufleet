@@ -4,6 +4,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useAppStore } from '@/store';
+import { DifyChatbotBubble } from '@/components/AIAssistant';
 
 const { Sider, Header, Content } = Layout;
 
@@ -79,6 +80,7 @@ const AppLayout: React.FC = () => {
         >
           <Outlet />
         </Content>
+        {location.pathname === '/dashboard' && <DifyChatbotBubble />}
       </Layout>
     </Layout>
   );

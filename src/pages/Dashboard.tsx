@@ -28,6 +28,7 @@ import type { Vehicle } from '@/types';
 import { formatTime } from '@/utils/format';
 import { maskVin, maskPlate, truncateLocation } from '@/utils/masking';
 import { useAppStore } from '@/store';
+import { ChatInput } from '@/components/AIAssistant';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -119,6 +120,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
+      <ChatInput />
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <Ttl level={4} style={{ margin: 0 }}>
